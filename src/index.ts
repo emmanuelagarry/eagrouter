@@ -49,6 +49,9 @@ export class EagRouter extends LitElement {
     super();
   }
 
+
+ 
+  private element: HTMLElement = document.createElement("div");
   myWindow = window;
 
   //  Saves on path navigated to
@@ -68,7 +71,7 @@ export class EagRouter extends LitElement {
     return this;
   }
 
-  element: HTMLElement = document.createElement("div");
+  
 
   installRoute() {
     this.routes.forEach((route) => {
