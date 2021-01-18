@@ -1,14 +1,14 @@
-import { LitElement, property } from 'lit-element';
+import { LitElement, property } from "lit-element";
 
-import page from 'page';
-import { BehaviorSubject } from 'rxjs';
+import page from "page";
+import { BehaviorSubject } from "rxjs";
 import {
   distinctUntilChanged,
   map,
   publishReplay,
   refCount,
   scan,
-} from 'rxjs/operators';
+} from "rxjs/operators";
 
 export interface Route {
   path: string;
@@ -17,38 +17,35 @@ export interface Route {
   bundle?: () => Promise<any>;
 }
 
-export type NavState = 'navStart' | 'navEnd' | 'navCold';
+// Interface for navigation state
+export type NavState = "navStart" | "navEnd" | "navCold";
 
+// Save lazy loaded modules in weak set
 const resolved = new WeakSet();
 
-const navigationEventsSubject$ = new BehaviorSubject<NavState>('navCold');
+const navigationEventsSubject$ = new BehaviorSubject<NavState>("navCold");
 export const navigationEvents$ = navigationEventsSubject$.asObservable();
 
-const pendingSubject$ = new BehaviorSubject<-1 | 1>(-1);
-
-export const pending$ = pendingSubject$.pipe(
-  scan((acc, curr) => acc + curr, 0),
-  map((num) => (num === 0 ? true : false)),
-  distinctUntilChanged(),
-);
-
-const queryStringSubject$ = new BehaviorSubject('');
+const queryStringSubject$ = new BehaviorSubject("");
 
 export const queryString$ = queryStringSubject$.pipe(
   distinctUntilChanged(),
   publishReplay(1),
-  refCount(),
+  refCount()
 );
 
-const param$ = (id: string) =>
+export const param$ = (id: string) =>
   queryString$.pipe(map((query) => new URLSearchParams(query).get(id)));
 
+export const outlet = (location: string) =>  page.show(location)
+
+// Create lit element compoenent
 export class EagRouter extends LitElement {
   constructor() {
     super();
   }
 
-  private element: HTMLElement = document.createElement('div');
+  private element: HTMLElement = document.createElement("div");
 
   myWindow = window;
 
@@ -76,7 +73,7 @@ export class EagRouter extends LitElement {
       });
     });
 
-    page.base('');
+    page.base("");
 
     page();
   }
@@ -85,35 +82,39 @@ export class EagRouter extends LitElement {
     this.installRoute();
   }
 
+
+
   async changeRoute(context: any) {
+   
     const elem =
       this.routes.filter((route) => route.path === context.routePath)[0] ||
-      this.routes.filter((route) => route.path === '*')[0];
+      this.routes.filter((route) => route.path === "*")[0];
 
     if (this.oldPath === elem.path) {
       return;
     }
 
-    navigationEventsSubject$.next('navStart');
+    navigationEventsSubject$.next("navStart");
 
+    // Resolve bundle if bundle exist.
     if (elem.bundle) {
       if (!resolved.has(elem.bundle())) {
         await elem.bundle();
       }
     }
 
-    if (!customElements.get(elem.component || '')) {
-      navigationEventsSubject$.next('navEnd');
-      throw new Error('Cant find Element');
+    // If custom element exist,
+    if (!customElements.get(elem.component || "")) {
+      navigationEventsSubject$.next("navEnd");
+      throw new Error("Cant find Element");
     }
 
     const oldElement = this.element;
 
-    this.element = document.createElement(elem.component || '');
-    this.requestUpdate('element', oldElement);
-    this.requestUpdate();
+    this.element = document.createElement(elem.component || "");
+    this.requestUpdate("element", oldElement);
     const observer = new IntersectionObserver((_) => {
-      navigationEventsSubject$.next('navEnd');
+      navigationEventsSubject$.next("navEnd");
       queryStringSubject$.next(context.querystring);
       this.myWindow.scrollTo(0, 0);
       observer.disconnect();
@@ -128,4 +129,4 @@ export class EagRouter extends LitElement {
   }
 }
 
-customElements.define('eag-router', EagRouter);
+customElements.define("eag-router", EagRouter);
