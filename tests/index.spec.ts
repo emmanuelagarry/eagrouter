@@ -45,27 +45,22 @@ describe("Router test", () => {
     beforeEach(async () => {
       el = await fixture(html` <eag-router .routes=${routes}></eag-router> `);
     });
-    // afterEach(async () => {
-    //   el = null;
-    // });
-
     it("should call changeRoute", async () => {
       const changeRoutStub = spy(el, "changeRoute");
       await el.updateComplete
-
       const promise = new Promise((resolve, _) => {
         setTimeout(() => {
           resolve(123);
         }, 1000);
       });
       await promise;
-
       expect(changeRoutStub).to.have.callCount(1);
     });
 
     // Router should render non lazy loaded route
     it("should render non lazy loaded element", async () => {
       
+      // @ts-ignore
       await el.changeRoute({routePath: '/one'})
       const promise = new Promise((resolve, _) => {
         setTimeout(() => {
@@ -80,6 +75,8 @@ describe("Router test", () => {
 
     // Router should render lazy loaded route
     it("should render lazy loaded element", async () => {
+
+            // @ts-ignore
 
       await el.changeRoute({routePath: '/two'})
     
