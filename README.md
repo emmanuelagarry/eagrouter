@@ -39,13 +39,13 @@ export class AppRoot extends LitElement {
 
     //   For pages without lazyloading, use like this
     {
-      component: "home-page",
+      component: "<home-page></home-page>",
       path: "/home",
     },
 
     //   For pages with lazyloading, use like this
     {
-      component: "products-page",
+      component: "<products-page></products-page>",
       path: "/products",
       bundle: () => import("./pages/products"),
     },
@@ -53,7 +53,7 @@ export class AppRoot extends LitElement {
     // use * for pages with routes that dont match.
     {
       path: "*",
-      component: "page-not-found",
+      component: "<page-not-found></page-not-found>",
       bundle: () => import("./pages/page-not-found"),
     },
   ];
