@@ -2,7 +2,7 @@
 
 ## More documentation coming up later!!!
 
-Eagrouter is an easy to use component router for custom elements. It works just like any other custom element. It takes in 2 properties, a route configuration object and an optional route base string. Eagrouter is really a wrapper around [Pagejs](https://github.com/visionmedia/page.js) which is a tiny express-inspired client-side router; if you like pagejs, then you would like Eagrouter. It uses almost all the same api's for declaring routes as pagejs . It also uses rxjs for reactivity and LitElement for handling custom elements. This three libraries combined together makes the router awseome to use. Check out the unpacked size, it is smaller than most client side router out there!!!
+Eagrouter is an easy to use component router for custom elements. It works just like any other custom element. It takes in 2 properties, a route configuration object and an optional route base string. Eagrouter is really a wrapper around [Pagejs](https://github.com/visionmedia/page.js) which is a tiny express-inspired client-side router; if you like pagejs, then you would like Eagrouter. It uses almost all the same api's for declaring routes as pagejs . It also uses rxjs for reactivity and LitElement for handling custom elements. This three libraries combined together makes the router awseome to use.
 
 ---
 
@@ -113,11 +113,16 @@ For child paths, use the router child element in the component the parent compon
 ---
 ```javascript
 // ..........
+
+
 export class ProductsPage extends LitElement {
+
+  // Use the full path to reference the child component.
+
   routes = [
     {
       component: "<products-page-one></products-page-one>",
-      // Use the full path to reference the child.
+    
       path: "/products/pageone",
     },
      {
@@ -141,7 +146,7 @@ customElements.define("products-page", ProductsPage);
 To guard a path; add a guard property to the object in the array. The property should return a boolean value. It can also take an observable or promise that returns a boolean value
 
 ```javascript
-// This functions just returns a regular promise
+// This function just returns a regular promise
 const ireturnAPromise = () => {
   const myFirstPromise = new Promise((resolve, reject) => {
     resolve(true) 
