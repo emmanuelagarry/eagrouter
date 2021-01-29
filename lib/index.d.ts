@@ -1,5 +1,6 @@
 import { LitElement } from "lit-element";
 import type { Subscription, Observable } from "rxjs";
+import type { Context } from "./utils/interfaces";
 export declare type NavState = "navStart" | "navEnd" | "navCold";
 export interface Route {
     path: string;
@@ -7,20 +8,6 @@ export interface Route {
     component?: string;
     bundle?: () => Promise<any>;
     guard?: () => Observable<boolean> | Promise<boolean> | boolean;
-}
-interface Context {
-    new (path: string, state?: any): Context;
-    [idx: string]: any;
-    save: () => void;
-    pushState: () => void;
-    handled: boolean;
-    canonicalPath: string;
-    path: string;
-    querystring: string;
-    pathname: string;
-    state: any;
-    title: string;
-    params: any;
 }
 export declare const navigationEvents$: Observable<NavState>;
 export declare const queryString$: Observable<string>;
@@ -50,4 +37,3 @@ export declare class EagRouterChild extends LitElement {
     renderView(path: string): Promise<void>;
     render(): Element;
 }
-export {};

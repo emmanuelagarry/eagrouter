@@ -1,14 +1,11 @@
 import { LitElement, property } from "lit-element";
 
-import { html, directive } from "lit-html";
 
 
 import page from "page";
 import {
   BehaviorSubject,
   Subject,
-  isObservable,
-  firstValueFrom,
 } from "rxjs";
 import type { Subscription, Observable } from "rxjs";
 import {
@@ -20,7 +17,9 @@ import {
 } from "rxjs/operators";
 
 
-import { pathToRegexp } from "./path-to-regex";
+import { pathToRegexp } from "./utils/path-to-regex";
+import { guardHandler, pathMatchKey, stringToHTML } from "./utils/helper-fuctions";
+import type { Context } from "./utils/interfaces";
 
 // Interface for navigation state
 export type NavState = "navStart" | "navEnd" | "navCold";
@@ -33,41 +32,16 @@ export interface Route {
   guard?: () => Observable<boolean> | Promise<boolean> | boolean;
 }
 
-interface Context {
-  new (path: string, state?: any): Context;
-  [idx: string]: any;
-  save: () => void;
-  pushState: () => void;
-  handled: boolean;
-  canonicalPath: string;
-  path: string;
-  querystring: string;
-  pathname: string;
-  state: any;
-  title: string;
-  params: any;
-}
 
 
-const pathMatchKey = {
-  delimiter: "/",
-  name: "id",
-  prefix: "",
-  optional: true,
-  partial: true,
-  pattern: "",
-  repeat: true,
-};
 
-let oldPath: string = "--";
+
+
+let oldPath: string = "";
+let oldpathChild: string = "";
 const myWindow = window;
 
 
-const stringToHTML =  (str: string)  => {
-	var parser = new DOMParser();
-	var doc = parser.parseFromString(str, 'text/html');
-	return doc.body.firstElementChild!
-};
 
 
 // Save lazy loaded modules in weak set
@@ -80,30 +54,6 @@ const queryStringSubject$ = new BehaviorSubject("");
 
 // Stores latest router path
 const latestRouterPathSubject$ = new BehaviorSubject<string>('');
-
-// Function handles guards
-const guardHandler = async (
-  guardExist: () => boolean | Observable<boolean> | Promise<boolean>, initiator: "parent" | 'child'
-) => {
-  const guard = guardExist();
-
-  //  Check if guard is an observable or promise and resolve it
-  const guardResolved = isObservable(guard)
-    ? await firstValueFrom(guard)
-    : await Promise.resolve(guard);
-
-  //  End function if the resolved value is false and replace path with old path
-  if (!guardResolved) {
-    if(initiator === 'parent') {
-      myWindow.history.pushState("", "", oldPath);
-    }
-   
-  }
-  return guardResolved;
-};
-
-
-
 
 // Exposes navigation events
 export const navigationEvents$: Observable<NavState> = pendingSubject$
@@ -129,16 +79,14 @@ export const param$ = (id: string) =>
 // exposes page router for navigating programatically
 export const outlet = (location: string) => page.show(location);
 
-// Exposes later router path
 
+// Exposes later router path
 export const latestRouterPath$ = latestRouterPathSubject$
   .asObservable()
   .pipe(shareReplay(1));
 
 
-
-
-// Create lit element compoenent
+// Create lit element componenent
 export class EagRouter extends LitElement {
   constructor() {
     super();
@@ -189,12 +137,11 @@ export class EagRouter extends LitElement {
 
     if (guardExist) {
       const guard = await guardHandler(guardExist, "parent");
-
       if (!guard) {
         return;
       }
     }
-    latestRouterPathSubject$.next(context.path);
+    latestRouterPathSubject$.next(context.pathname);
 
     if (oldPath.startsWith(elem.path)) {
       return;
@@ -210,7 +157,7 @@ export class EagRouter extends LitElement {
     }
 
 
-    const  oldElem = this.element
+    const oldElem = this.element
     this.element =  stringToHTML(elem.component || '<div><div>')
 
     this.requestUpdate('element', oldElem)
@@ -246,6 +193,7 @@ export class EagRouterChild extends LitElement {
   latestPath$ = latestRouterPath$.pipe(
     tap((route) => {
       if (route) {
+      
         this.renderView(route);
       }
     })
@@ -272,15 +220,15 @@ export class EagRouterChild extends LitElement {
   }
 
   async renderView(path: string) {
-
    
     try {
-      if ( path.startsWith(oldPath)) {
+      if ( path.startsWith(oldpathChild)) {
         return;
       }
-      // Find index of element
       const index = this.routes.findIndex((route) =>
+       
         pathToRegexp(route.path, [pathMatchKey]).test(path)
+      
       );
 
       // If index exist
@@ -296,6 +244,10 @@ export class EagRouterChild extends LitElement {
           if (!guard) {
             return;
           }
+        } else {
+          console.log('page not found')
+          // Go to page not found
+          // page.show('*')
         }
 
         //increment pending count
@@ -325,7 +277,7 @@ export class EagRouterChild extends LitElement {
           observer.disconnect();
         });
         observer.observe(this.element);
-        oldPath = path;
+        oldpathChild = path;
       }
     
     } catch (error) {
