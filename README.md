@@ -106,7 +106,7 @@ param$('someId').subscribe(param => {
 
 ```
 
-For child paths, use the router child element in the component the parent component
+For child paths, use the router child element in the parent component.
 ```html
 <eag-router-child></eag-router-child>
 ```
