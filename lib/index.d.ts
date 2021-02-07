@@ -1,7 +1,7 @@
-import { LitElement } from "lit-element";
-import type { Subscription, Observable } from "rxjs";
-import type { Context } from "./utils/interfaces";
-export declare type NavState = "navStart" | "navEnd" | "navCold";
+import { LitElement } from 'lit-element';
+import type { Subscription, Observable } from 'rxjs';
+import type { Context } from './utils/interfaces';
+export declare type NavState = 'navStart' | 'navEnd' | 'navCold';
 export interface Route {
     path: string;
     redirect?: string;

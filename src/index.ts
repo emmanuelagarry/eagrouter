@@ -87,8 +87,9 @@ export class EagRouter extends LitElement {
     return this;
   }
 
-  // Install routes
-  firstUpdated() {
+  connectedCallback(){
+    super.connectedCallback()
+     // Install routes
     this.installRoute();
   }
 
