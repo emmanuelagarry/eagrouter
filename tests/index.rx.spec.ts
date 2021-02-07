@@ -3,10 +3,9 @@ import { TestScheduler } from 'rxjs/testing';
 import {  spy } from "sinon";
 import { expect, fixture, html, assert } from "@open-wc/testing";
 
-import "../src/index";
-import "./element-one";
-
-import { EagRouter, Route, navigationEvents$, NavState } from "../src/index";
+import "../src/router/index";
+import "../src/pages/element-one";
+import { EagRouter, Route, navigationEvents$, NavState } from "../src/router/index";
 import { BehaviorSubject, interval } from 'rxjs';
 import { buffer, filter, shareReplay } from 'rxjs/operators';
 
@@ -24,7 +23,7 @@ const routes: Route[] = [
   {
     path: "/two",
     component: "element-two",
-    bundle: () => import("./element-two"),
+    bundle: () => import("../src/pages/element-two"),
   },
 ];
 

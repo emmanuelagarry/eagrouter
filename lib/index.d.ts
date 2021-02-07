@@ -18,8 +18,9 @@ export declare class EagRouter extends LitElement {
     constructor();
     private element;
     routes: Route[];
+    base: string;
     createRenderRoot(): this;
-    firstUpdated(): void;
+    connectedCallback(): void;
     installRoute(): void;
     changeRoute(context: Context): Promise<void>;
     render(): Element;

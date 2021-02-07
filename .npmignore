@@ -1,5 +1,10 @@
 .build
+.gitignore
 build
 web_modules
 node_modules
 src
+tsconfig.custom.json
+web-test-runner.config.mjs
+snowpack.config.js
+tests

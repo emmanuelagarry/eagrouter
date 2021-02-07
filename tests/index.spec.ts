@@ -1,10 +1,10 @@
 import {  spy } from "sinon";
 import { expect, fixture, html, assert } from "@open-wc/testing";
 
-import "../src/index";
-import "./element-one";
+import "../src/router/index";
+import "../src/pages/element-one";
 
-import { EagRouter, Route } from "../src/index";
+import { EagRouter, Route } from "../src/router/index";
 
 const routes: Route[] = [
   {
@@ -20,7 +20,7 @@ const routes: Route[] = [
   {
     path: "/two",
     component: "element-two",
-    bundle: () => import("./element-two"),
+    bundle: () => import("../src/pages/element-two"),
   },
 ];
 
@@ -33,7 +33,6 @@ describe("Router test", () => {
     });
     it("Should install routes", async () => {
       const installRoutesSpy = spy(el, "installRoute");
-      el.firstUpdated();
       expect(installRoutesSpy).to.have.callCount(1);
     });
   });
