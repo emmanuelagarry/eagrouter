@@ -9,6 +9,7 @@ import {
   shareReplay,
   tap,
   scan,
+  startWith,
 } from 'rxjs/operators';
 
 import { pathToRegexp } from './utils/path-to-regex';
@@ -45,10 +46,12 @@ const queryStringSubject$ = new BehaviorSubject('');
 // Stores latest router path
 const latestRouterPathSubject$ = new BehaviorSubject<string>('');
 
+
 // Exposes navigation events
 export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
   scan((acc, curr) => acc + curr, 0),
   map((num) => (num === 0 ? 'navEnd' : 'navStart')),
+  startWith('navCold' as NavState),
   shareReplay(1),
 );
 
@@ -86,6 +89,8 @@ export class EagRouter extends LitElement {
   @property()
   base: string  = ''
 
+
+
   createRenderRoot() {
     return this;
   }
@@ -117,7 +122,7 @@ export class EagRouter extends LitElement {
   async changeRoute(context: Context) {
     try {
       const elem =
-        this.routes.filter((route) => route.path === context.routePath)[0] ||
+        this.routes.filter((route) => route.path === context.routePath!)[0] ||
         this.routes.filter((route) => route.path === '*')[0];
 
       // Check if there is a guard
@@ -129,7 +134,7 @@ export class EagRouter extends LitElement {
           return;
         }
       }
-      latestRouterPathSubject$.next(context.pathname);
+      latestRouterPathSubject$.next(context.pathname!);
 
       if (oldPath.startsWith(elem.path)) {
         return;
@@ -145,7 +150,7 @@ export class EagRouter extends LitElement {
       }
 
       const oldElem = this.element;
-      this.element = stringToHTML(elem.component || '<div><div>');
+      this.element = stringToHTML(elem.component || '<div></div>');
 
       this.requestUpdate('element', oldElem);
 
@@ -153,7 +158,7 @@ export class EagRouter extends LitElement {
       const observer = new IntersectionObserver((_) => {
         // Decrement pending count
         pendingSubject$.next(-1);
-        queryStringSubject$.next(context.querystring);
+        queryStringSubject$.next(context.querystring!);
         myWindow.scrollTo(0, 0);
         observer.disconnect();
       });
@@ -161,7 +166,7 @@ export class EagRouter extends LitElement {
       oldPath = elem.path;
     } catch (error) {
       console.error(error);
-      pendingSubject$.next(1);
+      pendingSubject$.next(-1);
     }
   }
   render() {
@@ -264,7 +269,7 @@ export class EagRouterChild extends LitElement {
       }
     } catch (error) {
       console.error(error);
-      pendingSubject$.next(1);
+      pendingSubject$.next(-1);
     }
   }
 

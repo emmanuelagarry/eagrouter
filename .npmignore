@@ -8,3 +8,4 @@ tsconfig.custom.json
 web-test-runner.config.mjs
 snowpack.config.js
 tests
+public

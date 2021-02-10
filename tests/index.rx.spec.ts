@@ -1,13 +1,21 @@
-import { TestScheduler } from 'rxjs/testing';
+import { TestScheduler } from "rxjs/testing";
 
-import {  spy } from "sinon";
-import { expect, fixture, html, assert } from "@open-wc/testing";
+import { expect, fixture, html } from "@open-wc/testing";
 
 import "../src/router/index";
 import "../src/pages/element-one";
-import { EagRouter, Route, navigationEvents$, NavState } from "../src/router/index";
-import { BehaviorSubject, interval } from 'rxjs';
-import { buffer, filter, shareReplay } from 'rxjs/operators';
+import {
+  EagRouter,
+  Route,
+  navigationEvents$,
+  NavState,
+} from "../src/router/index";
+import { Subject } from "rxjs";
+import {
+  buffer,
+  take,
+  tap,
+} from "rxjs/operators";
 
 const routes: Route[] = [
   {
@@ -17,40 +25,49 @@ const routes: Route[] = [
 
   {
     path: "/one",
-    component: "element-one",
+    component: "<element-one></element-one>",
   },
 
   {
     path: "/two",
-    component: "element-two",
+    component: "<element-two></element-two>",
     bundle: () => import("../src/pages/element-two"),
+  },
+  {
+    path: "/three",
+    component: "<element-three></element-three>",
   },
 ];
 
 describe("Router test", () => {
-  let testScheduler: TestScheduler
+  let testScheduler: TestScheduler;
   beforeEach(() => {
-     testScheduler = new TestScheduler((actual, expected) => {
+    testScheduler = new TestScheduler((actual, expected) => {
       // asserting the two objects are equal
       // e.g. using chai.
       expect(actual).deep.equal(expected);
     });
-  })
+  });
   describe("Rxjs testing", () => {
     let el: EagRouter;
     before(async () => {
       el = await fixture(html` <eag-router .routes=${routes}></eag-router> `);
     });
-    it("run marbles well", async () => {
-       const navEvents$ = navigationEvents$;
-        const doneSubject$ = new BehaviorSubject('');
-        const done$ = doneSubject$.pipe(filter(sub => sub.length > 0))
-        const outputs$ = navEvents$.pipe(buffer(done$), shareReplay());
-  
-    // @ts-ignore
-      await el.changeRoute({routePath: '/two'})
-
-      await el.updateComplete
+    it("Navigation events run as expected", async () => {
+      const doneSubject$ = new Subject<string>();
+      const navgigationEnv: NavState[] = [];
+      navigationEvents$
+        .pipe(
+          buffer(doneSubject$),
+          tap((nav) => {
+            navgigationEnv.push(...nav);
+          }),
+          take(1)
+        )
+        .subscribe();
+      // @ts-ignore
+      await el.changeRoute({ routePath: "/two" });
+      await el.updateComplete;
       const promise = new Promise((resolve, _) => {
         setTimeout(() => {
           resolve(123);
@@ -58,26 +75,11 @@ describe("Router test", () => {
       });
       await promise;
       doneSubject$.next("done");
-
-      
-      testScheduler.run( async helpers => {
-        const { cold, expectObservable, expectSubscriptions } = helpers;
-
-        const e1 =  cold('-a--b--c---|');
-        
-        // let nav: NavState = 'navCold'
-
-          const expected = '  400ms ^  a|'
-          const sub = '^ -- !'
-          expectObservable(outputs$).toBe(expected)
-
-          // expectSubscriptions(e1.sub)
-
-
-      })
-
+  
+      const expectedNavEvents: NavState[] = ["navCold", "navStart", "navEnd"];
+      expect(navgigationEnv[0] && navgigationEnv[1] && navgigationEnv[2]).to.equal(
+        expectedNavEvents[0] && expectedNavEvents[1] && expectedNavEvents[2]
+      );
     });
   });
-
-  
 });

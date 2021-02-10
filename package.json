@@ -1,6 +1,6 @@
 {
   "name": "eagrouter",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "The Coolest web component router",
   "main": "lib/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "@types/page": "^1.11.1",
     "@web/dev-server-esbuild": "^0.2.11",
     "@web/test-runner": "^0.12.2",
+    "@web/test-runner-playwright": "^0.8.4",
     "snowpack": "^3.0.11",
     "typescript": "^4.1.3"
   },

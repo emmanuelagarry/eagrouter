@@ -11,7 +11,13 @@ module.exports = {
     ],
     devOptions: {
       /* ... */
+      hmr: true,
+
+      
     },
+    routes: [
+      {"match": "routes", "src": ".*", "dest": "/index.html"}
+  ],
     buildOptions: {
       /* ... */
   
