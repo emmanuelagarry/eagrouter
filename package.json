@@ -1,6 +1,6 @@
 {
   "name": "eagrouter",
-  "version": "2.0.7",
+  "version": "2.0.9",
   "description": "The Coolest web component router",
   "main": "lib/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "lit-element"
   ],
   "author": "emmanuel agarry",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "lit-element": "^2.4.0",
     "page": "^1.11.6",

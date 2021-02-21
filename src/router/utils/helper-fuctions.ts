@@ -19,7 +19,7 @@ export const stringToHTML = (str: string) => {
 // Function handles guards
 export const guardHandler = async (
   guardExist: () => boolean | Observable<boolean> | Promise<boolean>,
-  initiator: "parent" | "child",
+  initiator: "parent" | "child"
 ) => {
   const guard = guardExist();
 
@@ -31,8 +31,21 @@ export const guardHandler = async (
   //  End function if the resolved value is false and replace path with old path
   if (!guardResolved) {
     if (initiator === "parent") {
-      history.back()
+      history.back();
     }
   }
   return guardResolved;
+};
+
+export const routStringFormatter = (routePath: string) => {
+  const routeRegexStringArray = routePath.split("/");
+
+  if (
+    routeRegexStringArray[routeRegexStringArray.length - 1].startsWith("*") ||
+    routeRegexStringArray[routeRegexStringArray.length - 1].startsWith(":")
+  ) {
+    routeRegexStringArray.pop();
+  }
+
+  return routeRegexStringArray.join("/");
 };
