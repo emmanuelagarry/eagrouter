@@ -1,11 +1,10 @@
 import { LitElement, html, customElement, property } from 'lit-element';
 import type { Route } from './router';
-import  { routerHistory } from './router';
+import  { routerHistory, navigationEvents$ } from './router';
 
 import "./router"
 import './pages/element-one'
-import { of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+
 
 
 @customElement('app-root')
@@ -21,11 +20,13 @@ export class App extends LitElement {
         {
           path: "/one",
           component: "<element-one></element-one>",
+          hasChildren: false
         },
       
         {
           path: "/two",
           component: "<element-two></element-two>",
+          hasChildren: true,
           bundle: () => import("../src/pages/element-two"),
           guard: () => {
 
@@ -44,6 +45,7 @@ export class App extends LitElement {
           path: "/three/*",
           component: "<element-three></element-three>",
           bundle: () => import("../src/pages/element-three"),
+          hasChildren: true,
         },
 
        
@@ -51,6 +53,7 @@ export class App extends LitElement {
           path: "*",
           component: "<page-not-found></page-not-found>",
           bundle: () => import("../src/pages/page-not-found"),
+          
         },
       ];
   
@@ -58,14 +61,27 @@ export class App extends LitElement {
     bossText = 'bossText'
 
     connectedCallback(){
+
+    
       super.connectedCallback()
+
+      navigationEvents$.subscribe(item => {
+        // console.log(item)
+      })
       this.addEventListener('child-page-not-found', (_) => {
-        // alert('page not found')
         console.log('PAGE-NOT-FOUND')
       })
     }
     routeP(){
-      routerHistory.outlet('/three/three/yy')
+      routerHistory.push('/three/20/yy')
+    }
+    routeP2(){
+      routerHistory.push('/three/three/yy/ll')
+    }
+
+    routeP3(){
+      routerHistory.push('/three/three/ll')
+
     }
 
 
@@ -77,6 +93,8 @@ export class App extends LitElement {
          <br>  <br>
 
          <button @click=${this.routeP}>programatic </button>
+         <button @click=${this.routeP2}>programatic 2</button>
+         <button @click=${this.routeP3}>programatic 3</button>
             <eag-router .routes=${this.routes}></eag-router>
         `;
     }

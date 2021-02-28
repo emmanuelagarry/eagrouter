@@ -8,18 +8,12 @@ export class ElementThree extends LitElement {
 
 
   routes: Route[] = [
-   
-    // {
-    //   path: "/three",
-    //   component: "<element-one></element-one>",
-    //   // bundle: () => import("../..//src/pages/element-one"),
-    // },
     {
-      path: "/three",
+      path: "/three/three",
       component: "<element-one></element-one>",
     },
     {
-      path: "/",
+      path: "/three/three",
       component: "<element-one></element-one>",
     },
     {

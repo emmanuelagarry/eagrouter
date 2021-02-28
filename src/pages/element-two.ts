@@ -7,17 +7,10 @@ export class ElementTwo extends LitElement {
   @property()
   name = "element-two";
   routes: Route[] = [
-   
     {
-      path: "",
+      path: "/three/three/yy",
       component: "<element-one></element-one>",
-      bundle: () => import("../..//src/pages/element-one"),
-    },
-    
-    {
-      path: "/yy",
-      component: "<element-one></element-one>",
-      bundle: () => import("../..//src/pages/element-one"),
+      bundle: () => import("../pages/element-one"),
     },
   ];
 

@@ -1,8 +1,7 @@
 import { LitElement, property, internalProperty } from "lit-element";
-import type{ PropertyValues } from "lit-element";
 
 import page from "page";
-import { BehaviorSubject, Subject } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import type { Subscription, Observable } from "rxjs";
 import {
   distinctUntilChanged,
@@ -11,13 +10,15 @@ import {
   tap,
   scan,
   startWith,
+  filter,
+  buffer,
+  skip,
 } from "rxjs/operators";
 
 import { pathToRegexp } from "./utils/path-to-regex";
 import {
   guardHandler,
   pathMatchKey,
-  routStringFormatter,
   stringToHTML,
 } from "./utils/helper-fuctions";
 import type { Context } from "./utils/interfaces";
@@ -31,21 +32,19 @@ export interface Route {
   component?: string;
   bundle?: () => Promise<any>;
   guard?: () => Observable<boolean> | Promise<boolean> | boolean;
+  hasChildren?: boolean;
 }
 
 let oldPath: string = "--";
-let pathName: string = "";
 
-let reRun = false
+// let pathName = "";
 
-
-let routeRegex = "";
 const myWindow = window;
 
 // Save lazy loaded modules in weak set
 const resolved = new WeakSet();
 
-const pendingSubject$ = new Subject<number>();
+const pendingSubject$ = new BehaviorSubject<number>(0);
 
 // Stores full query string
 const queryStringSubject$ = new BehaviorSubject("");
@@ -55,14 +54,24 @@ const latestRouterPathSubject$ = new BehaviorSubject<string>("");
 
 // Exposes navigation events
 export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
+  skip(1),
   scan((acc, curr) => acc + curr, 0),
   map((num) => (num === 0 ? "navEnd" : "navStart")),
   startWith("navCold" as NavState),
   shareReplay(1)
 );
 
+const pageFoundBufferSubject$ = new BehaviorSubject<Boolean>(false);
+
+const pageFoundBuffer$ = pageFoundBufferSubject$.pipe(
+  skip(1),
+  buffer(navigationEvents$.pipe(filter((nav) => nav === "navEnd"))),
+  shareReplay(1)
+);
+
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
+  skip(1),
   distinctUntilChanged(),
   shareReplay(1)
 );
@@ -72,22 +81,30 @@ export const param$ = (id: string) =>
   queryString$.pipe(map((query) => new URLSearchParams(query).get(id)));
 
 // exposes page router for navigating programatically
-// export const outlet = (location: string) => page.show(location);
-
-
-export const routerHistory = {
-  outlet: (location: string) => page.show(location),
-  replace: (location: string) => page.replace(location)
-}
-
-Object.freeze(routerHistory)
+const push = (location: string) => page.show(location);
+const replace = (location: string) => page.show(location);
 
 // Exposes later router path
 
+export const routerHistory = {
+  push,
+  replace,
+};
+
+Object.freeze(routerHistory);
+
 export const latestRouterPath$ = latestRouterPathSubject$
+  .asObservable()
   .pipe(shareReplay(1));
 
-// Create lit element componenent
+/**
+ * A Simple client side router that uses pagejs and a dependency and
+ * has first clas support for Web components.
+ */
+
+/**
+ *  Creates lit element componenent
+ */
 export class EagRouter extends LitElement {
   constructor() {
     super();
@@ -97,52 +114,77 @@ export class EagRouter extends LitElement {
   @internalProperty()
   private element: Element = stringToHTML("<div></div>");
 
-  // @property({ type: Array })
   routes: Route[] = [];
 
-  // @property({ type: String })
   base: string = "";
 
+  private subs: Subscription[] = [];
   createRenderRoot() {
     return this;
   }
 
   connectedCallback() {
     super.connectedCallback();
-    // Install routes
+
+    const newEvent = new CustomEvent("child-page-not-found", {
+      bubbles: true,
+      composed: true,
+    });
+
+    this.subs.push(
+      pageFoundBuffer$.subscribe((buff) => {
+        const pageExist = buff.find((item) => item === true);
+        if (!pageExist && buff.length) {
+          this.dispatchEvent(newEvent);
+        }
+      })
+    );
+
+    /**
+       * Call to the install routes function to initialize pagejs
+       * when the class is connected
+
+       */
     this.installRoute();
   }
 
-  installRoute() {
-    this.routes.forEach((route) => {
-      if (route.redirect) {
-        page.redirect(route.path, route.redirect);
-        return;
-      }
-      page(route.path, (context) => {
-        this.changeRoute(context);
-      });
+  disconnectedCallback() {
+    this.subs.forEach((sub) => {
+      sub.unsubscribe();
     });
+    super.disconnectedCallback();
+  }
 
-    page.base(this.base);
 
-    page();
+
+
+  /**
+   * This fucntion set up Pagejs when called, 
+   * It loops through the routes property with is an array of routes
+   * and sets up the routes appropriately
+   */
+  installRoute() {
+    try {
+      this.routes.forEach((route) => {
+        if (route.redirect) {
+          page.redirect(route.path, route.redirect);
+          return;
+        }
+        page(route.path, (context) => {
+          this.changeRoute(context);
+        });
+      });
+
+      page.base(this.base);
+
+      page();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   // This function changes routes
   async changeRoute(context: Context) {
-
-    // console.log(context)
-   
-    if(pathName !== context.pathname){
-      pathName  = context.canonicalPath!
-     reRun = true;
-    }else {
-      
-      reRun = false;
-    }
-
-    routeRegex = routStringFormatter(context.routePath);
     try {
       const elem =
         this.routes.find((route) => route.path === context.routePath) ||
@@ -151,20 +193,23 @@ export class EagRouter extends LitElement {
       if (!elem) {
         return;
       }
-
-
       if (elem?.guard) {
         const guard = await guardHandler(elem.guard, "parent");
         if (!guard) {
           return;
         }
       }
+
+      // pathName = routStringFormatter(context.routePath);
       latestRouterPathSubject$.next(context.pathname!);
 
       if (oldPath.startsWith(elem.path)) {
         return;
       }
 
+      if (!elem.hasChildren) {
+        pageFoundBufferSubject$.next(true);
+      }
       pendingSubject$.next(1);
 
       // Resolve bundle if bundle exist.
@@ -175,7 +220,8 @@ export class EagRouter extends LitElement {
       }
       this.element = stringToHTML(elem.component || "<div></div>");
       // Using intersection observr to check when element is loaded
-      const observer = new IntersectionObserver((_) => {
+      const observer = new IntersectionObserver((entries, observer) => {
+        console.log(entries)
         // Decrement pending count
         pendingSubject$.next(-1);
         queryStringSubject$.next(context.querystring!);
@@ -201,93 +247,54 @@ export class EagRouterChild extends LitElement {
     super();
   }
 
-  
-
-  private initialization = 0;
-
-
-  eagParentPathChanged$ = new Subject<{}>()
-
   @internalProperty()
   private element: Element = stringToHTML("<div></div>");
-
   subScriptions: Subscription[] = [];
-
   latestPath$ = latestRouterPath$.pipe(
     distinctUntilChanged(),
     tap((route) => {
-          if (route && reRun) {
-            console.log({route})
+      if (route) {
         this.renderView(route);
       }
     })
   );
 
-  // @property({ type: Array })
+  @property({ type: Array })
   routes: Route[] = [];
 
   createRenderRoot() {
     return this;
-    
   }
 
   connectedCallback() {
-    super.connectedCallback();
     this.subScriptions.push(this.latestPath$.subscribe());
-    // this.subScriptions.push(this.eagParentPathChanged$.subscribe(item => {
-    //   console.log(item)
-    // }))
+    super.connectedCallback();
   }
 
   disconnectedCallback() {
-    this.subScriptions.forEach((sub) => {
-      sub.unsubscribe()
-    });
-    
+    this.subScriptions.forEach((sub) => sub.unsubscribe());
     super.disconnectedCallback();
   }
+
   async renderView(path: string) {
     try {
-      let elem = this.routes.find((route) =>
-        pathToRegexp(routeRegex + route.path, [pathMatchKey]).test(path)
-      );
-      // If index exist
+      let elem = this.routes.find((route) => {
+        return pathToRegexp(route.path, [pathMatchKey]).test(path);
+      });
+
       if (!elem) {
-        if (this.initialization === 0) {
-          const newEvent = new CustomEvent("child-page-not-found", {
-            bubbles: true,
-            composed: true,
-          });
-
-          this.dispatchEvent(newEvent);
-        }
+        pageFoundBufferSubject$.next(false);
+        this.element = stringToHTML("<div></div>");
         return;
-      } 
-      routeRegex = routStringFormatter(routeRegex + elem.path);
-      
-      // if( this.initialization > 0){
+      }
 
-     
+      if (elem?.path.split("/").length >= path.split("/").length) {
+        pageFoundBufferSubject$.next(true);
+      }
 
-      //   this.parentNode?.querySelector('eag-router-child')
-      //     .eagParentPathChanged$
-      //     .next({ routeRegex, init: this.initialization});
-
-      
-      //   return 
-     
-      // }
-
-      // console.log( this.initialization)
-    
-      // console.log({ routeRegex2: routeRegex });
-
-      this.initialization += 1;
-      // console.log({elem, init2: this.initialization})
-
-      // Check for guard
       if (elem?.guard) {
         const guard = await guardHandler(elem.guard, "child");
+
         if (!guard) {
           return;
         }
@@ -302,16 +309,14 @@ export class EagRouterChild extends LitElement {
           await elem.bundle();
         }
       }
-
-      
-
       // Create new element and update element
-      this.element = stringToHTML(elem.component || "<div><div>");
+      this.element = stringToHTML(elem.component || "<div></div>");
       // Using intersection observer to check when element is loaded
-      const observer = new IntersectionObserver((_) => {
+      const observer = new IntersectionObserver((entries, observer) => {
+
+        // console.log(entries)
         // Decrement pending count
         pendingSubject$.next(-1);
-
         myWindow.scrollTo(0, 0);
         observer.disconnect();
       });
