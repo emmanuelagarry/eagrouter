@@ -37,17 +37,17 @@ export const guardHandler = async (
   return guardResolved;
 };
 
-// export const routStringFormatter = (routePath: string) => {
-//   const routeRegexStringArray = routePath.split("/");
+export const routStringFormatter = (routePath: string) => {
+  const routeRegexStringArray = routePath.split("/");
 
-//   if (
-//     routeRegexStringArray[routeRegexStringArray.length - 1].startsWith("*") ||
-//     routeRegexStringArray[routeRegexStringArray.length - 1].startsWith(":")
-//   ) {
-//     routeRegexStringArray.pop();
+  if (
+    routeRegexStringArray[routeRegexStringArray.length - 1].startsWith("*") ||
+    routeRegexStringArray[routeRegexStringArray.length - 1].startsWith(":")
+  ) {
+    routeRegexStringArray.pop();
 
-//     console.log(routeRegexStringArray)
-//   }
+    // console.log(routeRegexStringArray)
+  }
 
-//   return routeRegexStringArray.join("/");
-// };
+  return routeRegexStringArray.join("/");
+};

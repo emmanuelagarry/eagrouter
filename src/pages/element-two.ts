@@ -6,18 +6,27 @@ import "../router"
 export class ElementTwo extends LitElement {
   @property()
   name = "element-two";
-  routes: Route[] = [
-    {
-      path: "/three/three/yy",
-      component: "<element-one></element-one>",
-      bundle: () => import("../pages/element-one"),
-    },
-  ];
+  // routes: Route[] = [
+  //   {
+  //     path: "/three/three/yy",
+  //     component: "<element-one></element-one>",
+  //     bundle: () => import("../pages/element-one"),
+  //   },
+  // ];
+
+
+  createRenderRoot(){
+    return this
+  }
+
+  connectedCallback(){
+    super.connectedCallback()
+  }
 
   render() {
     return html`
     <p>two</p>
-    <eag-router-child .routes=${this.routes}></eag-router-child>
+    <eag-router-child></eag-router-child>
     `;
   }
 }
