@@ -12,12 +12,13 @@ export class ElementThree extends LitElement {
 
   routes: Route[] = [
     {
-      path: "/three",
+      path: "/three/three",
       component: "<element-one></element-one>",
     },
     {
-      path: "/three/three/yy",
-      component: "<element-one></element-one>",
+      path: "/three/three/*",
+      component: "<element-two></element-two>",
+      bundle: () => import("../../src/pages/element-two"),
     },
     // {
     //   path: "/three/*",
@@ -28,7 +29,7 @@ export class ElementThree extends LitElement {
   render() {
     return html`
     <p>three</p>
-    <eag-router-child></eag-router-child>
+    <eag-router-child .routes=${this.routes}></eag-router-child>
     `;
   }
 }

@@ -16,13 +16,11 @@ export class App extends LitElement {
     {
       path: "/one",
       component: "<element-one></element-one>",
-      hasChildren: false,
     },
 
     {
       path: "/two",
       component: "<element-two></element-two>",
-      hasChildren: true,
       bundle: () => import("../src/pages/element-two"),
       guard: () => {
         return new Promise((resolve, _) => {
@@ -40,24 +38,6 @@ export class App extends LitElement {
       path: "/three/*",
       component: "<element-three></element-three>",
       bundle: () => import("../src/pages/element-three"),
-      hasChildren: true,
-      children: [
-        {
-          path: "/three",
-          component: "<element-one></element-one>",
-        },
-        {
-          path: "/three/yy/:id",
-          bundle: () => import("../src/pages/element-two"),
-          component: "<element-two></element-two>",
-          children: [
-            {
-              path: "/one",
-              component: "<element-one></element-one>",
-            },
-          ],
-        },
-      ],
     },
 
     {

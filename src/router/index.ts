@@ -1,7 +1,7 @@
-import { LitElement, property, internalProperty } from "lit-element";
+import { LitElement, property } from "lit-element";
 
 import page from "page";
-import { BehaviorSubject, firstValueFrom } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import type { Subscription, Observable } from "rxjs";
 import {
   distinctUntilChanged,
@@ -10,9 +10,9 @@ import {
   tap,
   scan,
   startWith,
-  filter,
-  buffer,
   skip,
+  buffer,
+  filter,
 } from "rxjs/operators";
 
 import { pathToRegexp } from "./utils/path-to-regex";
@@ -20,7 +20,6 @@ import {
   guardHandler,
   pathMatchKey,
   stringToHTML,
-  routStringFormatter,
 } from "./utils/helper-fuctions";
 import type { Context } from "./utils/interfaces";
 
@@ -33,20 +32,16 @@ export interface Route {
   component?: string;
   bundle?: () => Promise<any>;
   guard?: () => Observable<boolean> | Promise<boolean> | boolean;
-  hasChildren?: boolean;
-  children?: Route[];
 }
 
 let oldPath: string = "--";
-
-// let pathName = "";
-
+let oldpathChild: string = "--";
 const myWindow = window;
 
 // Save lazy loaded modules in weak set
 const resolved = new WeakSet();
 
-const pendingSubject$ = new BehaviorSubject<number>(0);
+const pendingSubject$ = new Subject<number>();
 
 // Stores full query string
 const queryStringSubject$ = new BehaviorSubject("");
@@ -56,21 +51,17 @@ const latestRouterPathSubject$ = new BehaviorSubject<string>("");
 
 // Exposes navigation events
 export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
-  skip(1),
   scan((acc, curr) => acc + curr, 0),
   map((num) => (num === 0 ? "navEnd" : "navStart")),
   startWith("navCold" as NavState),
   shareReplay(1)
 );
 
-const pageFoundBufferSubject$ = new BehaviorSubject<Boolean>(false);
-
-const pageFoundBuffer$ = pageFoundBufferSubject$.pipe(
+const pageFoundSubject$ = new BehaviorSubject(false);
+const pageFound$ = pageFoundSubject$.pipe(
   skip(1),
-  buffer(navigationEvents$.pipe(filter((nav) => nav === "navEnd"))),
-  shareReplay(1)
+  buffer(navigationEvents$.pipe(filter((env) => env === "navEnd")))
 );
-
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
   skip(1),
@@ -83,148 +74,98 @@ export const param$ = (id: string) =>
   queryString$.pipe(map((query) => new URLSearchParams(query).get(id)));
 
 // exposes page router for navigating programatically
-const push = (location: string) => page.show(location);
-const replace = (location: string) => page.show(location);
 
-// Exposes later router path
+// This will be deprecated soon
+export const outlet = (location: string) => page.show(location);
+
+const push = (location: string) => page.show(location);
+// const replace = (location: string) => page(location);
 
 export const routerHistory = {
   push,
-  replace,
+  // replace,
 };
 
 Object.freeze(routerHistory);
 
-export const latestRouterPath$ = latestRouterPathSubject$
-  .asObservable()
-  .pipe(shareReplay(1));
+// Exposes later router path
 
-/**
- * A Simple client side router that uses pagejs and a dependency and
- * has first clas support for Web components.
- */
+export const latestRouterPath$ = latestRouterPathSubject$.pipe(
+  distinctUntilChanged(),
+  shareReplay(1)
+);
 
-/**
- *  Creates lit element componenent
- */
+
+// Create lit element componenent
 export class EagRouter extends LitElement {
   constructor() {
     super();
   }
 
+  subs: Subscription[] = [];
   // set div as the base element
-  @internalProperty()
   private element: Element = stringToHTML("<div></div>");
-
   routes: Route[] = [];
-
   base: string = "";
-
-  private subs: Subscription[] = [];
   createRenderRoot() {
     return this;
   }
 
   connectedCallback() {
     super.connectedCallback();
-
-    const newEvent = new CustomEvent("child-page-not-found", {
-      bubbles: true,
-      composed: true,
-    });
-
-
-    this.addEventListener('update-requested', (event) => {
-      event.stopPropagation()
-      console.log('update-requested')
-      this.requestUpdate()
-    } )
-
+    // Install routes
+    this.installRoute();
     this.subs.push(
-      pageFoundBuffer$.subscribe((buff) => {
-        const pageExist = buff.find((item) => item === true);
-        if (!pageExist && buff.length) {
-          this.dispatchEvent(newEvent);
-        }
+      pageFound$.subscribe((found) => {
+        // console.log(found);
       })
     );
-
-    /**
-       * Call to the install routes function to initialize pagejs
-       * when the class is connected
-
-       */
-    this.installRoute();
   }
 
   disconnectedCallback() {
-    this.subs.forEach((sub) => {
-      sub.unsubscribe();
-    });
+    this.subs.forEach((sub) => sub.unsubscribe());
     super.disconnectedCallback();
   }
 
-  /**
-   * This fucntion set up Pagejs when called,
-   * It loops through the routes property with is an array of routes
-   * and sets up the routes appropriately
-   */
   installRoute() {
-    try {
-      this.routes.forEach((route) => {
-        if (route.redirect) {
-          page.redirect(route.path, route.redirect);
-          return;
-        }
-        page(route.path, (context) => {
-          this.changeRoute(context);
-        });
+    this.routes.forEach((route) => {
+      if (route.redirect) {
+        page.redirect(route.path, route.redirect);
+        return;
+      }
+
+      page(route.path, (context) => {
+        this.changeRoute(context);
       });
+    });
 
-      page.base(this.base);
+    page.base(this.base);
 
-      page();
-    } catch (error) {
-      console.error(error);
-    }
+    page();
   }
 
   // This function changes routes
   async changeRoute(context: Context) {
     try {
       const elem =
-        this.routes.find((route) => route.path === context.routePath) ||
-        this.routes.find((route) => route.path === "*");
+        this.routes.filter((route) => route.path === context.routePath!)[0] ||
+        this.routes.filter((route) => route.path === "*")[0];
 
-      if (!elem) {
-        return;
-      }
-      if (elem?.guard) {
-        const guard = await guardHandler(elem.guard, "parent");
+      // Check if there is a guard
+      const guardExist = elem?.guard;
+
+      if (guardExist) {
+        const guard = await guardHandler(guardExist, "parent");
         if (!guard) {
           return;
         }
       }
-
-      // pathName = routStringFormatter(context.routePath);
       latestRouterPathSubject$.next(context.pathname!);
 
       if (oldPath.startsWith(elem.path)) {
-        // console.log({oldPath, elemPath:elem.path}, )
-
-        const child = this.element.querySelector<EagRouterChild>(
-          "eag-router-child"
-        );
-
-        if (child) {
-          child.checkRoute = routStringFormatter(elem.path);
-        }
         return;
       }
 
-      if (!elem.hasChildren) {
-        pageFoundBufferSubject$.next(true);
-      }
       pendingSubject$.next(1);
 
       // Resolve bundle if bundle exist.
@@ -233,56 +174,21 @@ export class EagRouter extends LitElement {
           await elem.bundle();
         }
       }
+
+      const oldElem = this.element;
       this.element = stringToHTML(elem.component || "<div></div>");
 
+      this.requestUpdate("element", oldElem);
+
       // Using intersection observr to check when element is loaded
-      const io = new IntersectionObserver(async (_) => {
-        if (elem.children) {
-          // console.log(elem)
-          const childRouter = this.element.querySelector<EagRouterChild>(
-            "eag-router-child"
-          );
-
-          
-
-
-          if (childRouter) {
-            const parentPath = routStringFormatter(elem.path);
-
-            const childElem = elem.children.find((item) => {
-              //  console.log(routStringFormatter(elem.path) + item.path)
-              return pathToRegexp(routStringFormatter(parentPath) + item.path, [
-                pathMatchKey,
-              ]).test(context.pathname!);
-            });
-            // console.log(childElem)
-
-            if (childElem?.bundle) {
-              if (!resolved.has(childElem.bundle())) {
-                await childElem.bundle();
-              }
-            }
-
-
-
-            childRouter.childeRoutes = elem.children;
-            childRouter.setPathInitiator = parentPath + elem.path;
-            childRouter.setResolvedPath = parentPath + elem.path
-            childRouter.renderView(parentPath)
-
-            // console.log(routStringFormatter(elem.path));
-          }
-        }
-        // const element = this.querySelector('eag-router-child')
-        // console.log(element)
-
+      const observer = new IntersectionObserver((_) => {
         // Decrement pending count
         pendingSubject$.next(-1);
         queryStringSubject$.next(context.querystring!);
         myWindow.scrollTo(0, 0);
-        io.disconnect();
+        observer.disconnect();
       });
-      io.observe(this);
+      observer.observe(this.element);
       oldPath = elem.path;
     } catch (error) {
       console.error(error);
@@ -301,38 +207,23 @@ export class EagRouterChild extends LitElement {
     super();
   }
 
-  private routes: Route[] = [];
+  private element: Element = stringToHTML(
+    "<eag-router-empty></eag-router-empty>"
+  );
+  subScriptions: Subscription[] = [];
+  latestPath$ = latestRouterPath$.pipe(
+    tap((route) => {
+      if (route) {
+        this.renderView(route);
+      }
+    })
+  );
 
-  set childeRoutes(r: Route[]) {
-    this.routes = r;
-  }
+  @property()
+  routes: Route[] = [];
 
-  outerThis = this;
-
-  private pathInitiator = "";
-  private resolvedPath = "--";
-
-
-  /**
-   * when called checkes if route should re-render itself
-   */
-  set checkRoute(path: string) {
-    // console.log({path, pathInitiator: this.pathInitiator, routes: this.routes})
-     
-    this.renderView(path);
-  }
-
-  set setPathInitiator(path: string) {
-    // console.log(path)
-    this.pathInitiator = path;
-    // this.resolvedPath = routStringFormatter(path)
-  }
-
-  set setResolvedPath(path: string) {
-    // console.log(path)
-    this.resolvedPath = routStringFormatter(path);
-  }
-
+  @property()
+  initialPath: string | null = null;
 
   createRenderRoot() {
     return this;
@@ -340,75 +231,49 @@ export class EagRouterChild extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener("setPathInitiator", (event) => {
-      // console.log(event.detail)
-    });
+    this.subScriptions.push(this.latestPath$.subscribe());
   }
 
-  checkSelf() {}
-
   disconnectedCallback() {
+    this.subScriptions.forEach((sub) => sub.unsubscribe());
     super.disconnectedCallback();
   }
 
   async renderView(path: string) {
-
     try {
+      // if ( path === oldpathChild) {
 
-      const locationPathname = await firstValueFrom(latestRouterPath$);
+      //   return;
+      // }
+      const elem = this.routes.find((route) =>
+        pathToRegexp(route.path, [pathMatchKey]).test(path)
+      );
+      // If index exist
 
-      /**
-       *  Checks if path is active and signals children routes to check
-       *  themselves if they should be rendered
-       */
-     
-      if (
-        pathToRegexp(this.resolvedPath, [pathMatchKey]).test(locationPathname)
-      ) {
-        const child = this.firstElementChild?.shadowRoot?.querySelector<EagRouterChild>(
-          "eag-router-child"
-        ) || this.firstElementChild?.querySelector<EagRouterChild>(
-          "eag-router-child"
-        )
 
-        if (child) {
-          child.checkRoute = routStringFormatter(this.resolvedPath);
-        }
-        return;
-      }
-
-      console.log(this.pathInitiator)
-
-      const elem = this.routes.find((route) => {
-        return pathToRegexp(path + route.path, [pathMatchKey]).test(
-          locationPathname
-        );
-      });
 
       if (!elem) {
-        pageFoundBufferSubject$.next(false);
-        // this.element = stringToHTML("<div></div>");
-
-
-        this.replaceChild(
-          stringToHTML("<div></div>"),
-          this.childNodes[0]
-        );
+        this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
+        oldpathChild = path;
+        this.requestUpdate();
+        pageFoundSubject$.next(false);
         return;
       }
 
-      console.log({elementPath: elem.path})
+      const childRouter = this.element.querySelector<EagRouterChild>(
+        "eag-router-child"
+      );
 
-      this.resolvedPath = path  +elem.path;
-
-      console.log(this.resolvedPath)
-
-      if (elem?.path.split("/").length >= path.split("/").length) {
-        pageFoundBufferSubject$.next(true);
+      if (!childRouter || !childRouter?.routes?.length) {
+        pageFoundSubject$.next(true);
       }
 
-      if (elem?.guard) {
-        const guard = await guardHandler(elem.guard, "child");
+      const guardExist = elem.guard;
+
+      // Check for guard
+      if (guardExist) {
+        const guard = await guardHandler(guardExist, "child");
+
         if (!guard) {
           return;
         }
@@ -424,76 +289,23 @@ export class EagRouterChild extends LitElement {
         }
       }
 
-    
-    
-      this.replaceChild(
-        stringToHTML(elem?.component || "<div></div>"),
-        this.childNodes[0]
-      );
+      // Create new element and update element
 
+      const oldElem = this.element;
+      this.element = stringToHTML(elem.component || "<div></div>");
+      this.requestUpdate("element", oldElem);
 
-    
-      const io = new IntersectionObserver(async (entry, observer) => {
-
-
-        if (elem.children) {
-          // console.log(elem)
-       
-          const childRouter = this.firstElementChild?.shadowRoot?.querySelector<EagRouterChild>(
-            "eag-router-child"
-          ) || this.firstElementChild?.querySelector<EagRouterChild>(
-            "eag-router-child"
-          )
-
-         
-
-          if (childRouter) {
-            // const parentPath = routStringFormatter(elem.path);
-
-            const childElem = elem.children.find((item) => {
-              //  console.log(routStringFormatter(elem.path) + item.path)
-              return pathToRegexp(routStringFormatter(this.resolvedPath) + item.path, [
-                pathMatchKey,
-              ]).test(locationPathname);
-            });
-            // console.log(childElem)
-
-            if (childElem?.bundle) {
-              if (!resolved.has(childElem.bundle())) {
-                await childElem.bundle();
-              }
-            }
-
-  
-          
-            childRouter.childeRoutes = elem.children;
-            childRouter.setPathInitiator = this.resolvedPath + elem.path;
-
-            childRouter.replaceChild(
-              stringToHTML(childElem?.component || "<div></div>"),
-              childRouter.childNodes[0]
-            );
-  
-
-            // console.log(routStringFormatter(elem.path));
-          }
-        }
-
-
-
-
-
-
-
-        // alert('something happend')
-        // console.log(entries)
+      // Using intersection observer to check when element is loaded
+      const observer = new IntersectionObserver((_) => {
         // Decrement pending count
+
         pendingSubject$.next(-1);
+
         myWindow.scrollTo(0, 0);
-        io.disconnect();
+        observer.disconnect();
       });
-      io.observe(this);
-      this.requestUpdate();
+      observer.observe(this.element);
+      oldpathChild = path;
     } catch (error) {
       console.error(error);
       pendingSubject$.next(-1);
@@ -501,7 +313,7 @@ export class EagRouterChild extends LitElement {
   }
 
   render() {
-    return '';
+    return this.element;
   }
 }
 customElements.define("eag-router-child", EagRouterChild);

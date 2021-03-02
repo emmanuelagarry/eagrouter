@@ -78,7 +78,7 @@ customElements.define("app-root", AppRoot);
 You can import these other things from eagrouter. More documentation coming soon.
 
 ```javascript
-import { Route, navigationEvents$, NavState, queryString$, param$ } from "eagrouter";
+import { Route, navigationEvents$, NavState, queryString$, param$, routerHistory } from "eagrouter";
 ```
 
 ```javascript
@@ -103,6 +103,11 @@ navigationEvents$.subscribe(navState => {
 param$('someId').subscribe(param => {
    console.log(param)
 })
+
+// For programmatic routing use the 
+// Router history object
+routerHistory.push("some-route");
+
 
 ```
 
