@@ -1,7 +1,7 @@
-import { LitElement } from 'lit-element';
-import type { Subscription, Observable } from 'rxjs';
-import type { Context } from './utils/interfaces';
-export declare type NavState = 'navStart' | 'navEnd' | 'navCold';
+import { LitElement } from "lit-element";
+import type { Subscription, Observable } from "rxjs";
+import type { Context } from "./utils/interfaces";
+export declare type NavState = "navStart" | "navEnd" | "navCold";
 export interface Route {
     path: string;
     redirect?: string;
@@ -13,14 +13,19 @@ export declare const navigationEvents$: Observable<NavState>;
 export declare const queryString$: Observable<string>;
 export declare const param$: (id: string) => Observable<string | null>;
 export declare const outlet: (location: string) => void;
+export declare const routerHistory: {
+    push: (location: string) => void;
+};
 export declare const latestRouterPath$: Observable<string>;
 export declare class EagRouter extends LitElement {
     constructor();
+    subs: Subscription[];
     private element;
     routes: Route[];
     base: string;
     createRenderRoot(): this;
     connectedCallback(): void;
+    disconnectedCallback(): void;
     installRoute(): void;
     changeRoute(context: Context): Promise<void>;
     render(): Element;

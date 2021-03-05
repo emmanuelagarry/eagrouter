@@ -146,6 +146,7 @@ export class EagRouter extends LitElement {
 
   // This function changes routes
   async changeRoute(context: Context) {
+    queryStringSubject$.next(context.querystring!);
     try {
       const elem =
         this.routes.filter((route) => route.path === context.routePath!)[0] ||
@@ -184,7 +185,7 @@ export class EagRouter extends LitElement {
       const observer = new IntersectionObserver((_) => {
         // Decrement pending count
         pendingSubject$.next(-1);
-        queryStringSubject$.next(context.querystring!);
+       
         myWindow.scrollTo(0, 0);
         observer.disconnect();
       });

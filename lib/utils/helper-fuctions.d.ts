@@ -10,3 +10,4 @@ export declare const pathMatchKey: {
 };
 export declare const stringToHTML: (str: string) => Element;
 export declare const guardHandler: (guardExist: () => boolean | Observable<boolean> | Promise<boolean>, initiator: "parent" | "child") => Promise<boolean>;
+export declare const routStringFormatter: (routePath: string) => string;
