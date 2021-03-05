@@ -22,6 +22,7 @@ import {
   stringToHTML,
 } from "./utils/helper-fuctions";
 import type { Context } from "./utils/interfaces";
+import { RouterMix } from "./utils/mixins";
 
 // Interface for navigation state
 export type NavState = "navStart" | "navEnd" | "navCold";
@@ -35,7 +36,6 @@ export interface Route {
 }
 
 let oldPath: string = "--";
-let oldpathChild: string = "--";
 const myWindow = window;
 
 // Save lazy loaded modules in weak set
@@ -59,8 +59,8 @@ export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
 
 const pageFoundSubject$ = new BehaviorSubject(false);
 const pageFound$ = pageFoundSubject$.pipe(
-  skip(1),
-  buffer(navigationEvents$.pipe(filter((env) => env === "navEnd")))
+  buffer(navigationEvents$.pipe(filter((env) => env === "navEnd"))),
+  map((buf) => buf[buf.length - 1])
 );
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
@@ -79,11 +79,16 @@ export const param$ = (id: string) =>
 export const outlet = (location: string) => page.show(location);
 
 const push = (location: string) => page.show(location);
-// const replace = (location: string) => page(location);
+const replace = (
+  path: string,
+  state?: any,
+  init?: boolean | undefined,
+  dispatch?: boolean | undefined
+) => page.replace(path, state, init, dispatch);
 
 export const routerHistory = {
   push,
-  // replace,
+  replace,
 };
 
 Object.freeze(routerHistory);
@@ -95,16 +100,13 @@ export const latestRouterPath$ = latestRouterPathSubject$.pipe(
   shareReplay(1)
 );
 
-
 // Create lit element componenent
-export class EagRouter extends LitElement {
+export class EagRouter extends RouterMix(LitElement) {
   constructor() {
     super();
   }
-
-  subs: Subscription[] = [];
   // set div as the base element
-  private element: Element = stringToHTML("<div></div>");
+  // private element: Element = stringToHTML("<div></div>");
   routes: Route[] = [];
   base: string = "";
   createRenderRoot() {
@@ -115,15 +117,23 @@ export class EagRouter extends LitElement {
     super.connectedCallback();
     // Install routes
     this.installRoute();
-    this.subs.push(
-      pageFound$.subscribe((found) => {
-        // console.log(found);
-      })
+    const newCustomEvent = new CustomEvent("eag-child-page-not-found", {
+      bubbles: true,
+      composed: true,
+    });
+
+    this.addToSub(
+      pageFound$.pipe(
+        tap((found) => {
+          if (found === false) {
+            this.dispatchEvent(newCustomEvent);
+          }
+        })
+      )
     );
   }
 
   disconnectedCallback() {
-    this.subs.forEach((sub) => sub.unsubscribe());
     super.disconnectedCallback();
   }
 
@@ -146,11 +156,10 @@ export class EagRouter extends LitElement {
 
   // This function changes routes
   async changeRoute(context: Context) {
-    queryStringSubject$.next(context.querystring!);
     try {
-      const elem =
-        this.routes.filter((route) => route.path === context.routePath!)[0] ||
-        this.routes.filter((route) => route.path === "*")[0];
+      const elem = this.routes.find(
+        (route) => route.path === context.routePath!
+      );
 
       // Check if there is a guard
       const guardExist = elem?.guard;
@@ -161,9 +170,17 @@ export class EagRouter extends LitElement {
           return;
         }
       }
-      latestRouterPathSubject$.next(context.pathname!);
 
+      if (!elem) {
+        return;
+      }
+
+      // pageFoundSubject$.next(true);
+
+      latestRouterPathSubject$.next(context.pathname!);
+      queryStringSubject$.next(context.querystring!);
       if (oldPath.startsWith(elem.path)) {
+       
         return;
       }
 
@@ -182,14 +199,14 @@ export class EagRouter extends LitElement {
       this.requestUpdate("element", oldElem);
 
       // Using intersection observr to check when element is loaded
-      const observer = new IntersectionObserver((_) => {
-        // Decrement pending count
-        pendingSubject$.next(-1);
-       
-        myWindow.scrollTo(0, 0);
-        observer.disconnect();
-      });
-      observer.observe(this.element);
+
+      this.observerHandler(
+        pageFoundSubject$,
+        myWindow,
+        pendingSubject$,
+        context.querystring!,
+        queryStringSubject$
+      );
       oldPath = elem.path;
     } catch (error) {
       console.error(error);
@@ -203,16 +220,10 @@ export class EagRouter extends LitElement {
 customElements.define("eag-router", EagRouter);
 
 //  Child router
-export class EagRouterChild extends LitElement {
-  constructor() {
-    super();
-  }
+export class EagRouterChild extends RouterMix(LitElement) {
+  private pathMatch = "eagPathMatch";
 
-  private element: Element = stringToHTML(
-    "<eag-router-empty></eag-router-empty>"
-  );
-  subScriptions: Subscription[] = [];
-  latestPath$ = latestRouterPath$.pipe(
+  private latestPath$ = latestRouterPath$.pipe(
     tap((route) => {
       if (route) {
         this.renderView(route);
@@ -232,49 +243,45 @@ export class EagRouterChild extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.subScriptions.push(this.latestPath$.subscribe());
+    this.addToSub(this.latestPath$);
+  }
+  childRouterCheck() {
+    return (
+      this.element.querySelector<EagRouterChild>("eag-router-child") ||
+      this.element?.shadowRoot?.querySelector<EagRouterChild>(
+        "eag-router-child"
+      )
+    );
   }
 
   disconnectedCallback() {
-    this.subScriptions.forEach((sub) => sub.unsubscribe());
     super.disconnectedCallback();
   }
 
   async renderView(path: string) {
+    // if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
+    //   const childRouter = this.childRouterCheck()
+    //   return;
+    // }
     try {
-      // if ( path === oldpathChild) {
-
-      //   return;
-      // }
       const elem = this.routes.find((route) =>
         pathToRegexp(route.path, [pathMatchKey]).test(path)
       );
-      // If index exist
-
-
 
       if (!elem) {
+        this.pathMatch = "eagPathMatch";
         this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
-        oldpathChild = path;
         this.requestUpdate();
         pageFoundSubject$.next(false);
         return;
       }
-
-      const childRouter = this.element.querySelector<EagRouterChild>(
-        "eag-router-child"
-      );
-
-      if (!childRouter || !childRouter?.routes?.length) {
-        pageFoundSubject$.next(true);
-      }
+      this.pathMatch = elem.path;
 
       const guardExist = elem.guard;
 
       // Check for guard
       if (guardExist) {
         const guard = await guardHandler(guardExist, "child");
-
         if (!guard) {
           return;
         }
@@ -282,31 +289,28 @@ export class EagRouterChild extends LitElement {
 
       //increment pending count
       pendingSubject$.next(1);
-
       // Resolve bundle if bundle exist.
       if (elem?.bundle) {
         if (!resolved.has(elem.bundle())) {
           await elem.bundle();
         }
       }
-
       // Create new element and update element
 
       const oldElem = this.element;
-      this.element = stringToHTML(elem.component || "<div></div>");
+      this.element = stringToHTML(
+        elem.component || "<eag-router-empty></eag-router-empty>"
+      );
       this.requestUpdate("element", oldElem);
-
       // Using intersection observer to check when element is loaded
-      const observer = new IntersectionObserver((_) => {
-        // Decrement pending count
 
-        pendingSubject$.next(-1);
-
-        myWindow.scrollTo(0, 0);
-        observer.disconnect();
-      });
-      observer.observe(this.element);
-      oldpathChild = path;
+      this.observerHandler(
+        pageFoundSubject$,
+        myWindow,
+        pendingSubject$,
+        "",
+        queryStringSubject$
+      );
     } catch (error) {
       console.error(error);
       pendingSubject$.next(-1);

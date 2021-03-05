@@ -56,7 +56,7 @@ export class App extends LitElement {
     navigationEvents$.subscribe((item) => {
       // console.log(item)
     });
-    this.addEventListener("child-page-not-found", (_) => {
+    this.addEventListener("eag-child-page-not-found", (_) => {
       console.log("PAGE-NOT-FOUND");
     });
   }
@@ -79,7 +79,10 @@ export class App extends LitElement {
       <a href="/three"><button>three</button></a
       ><a href="/three/three"><button>three three</button></a
       ><a href="/three/three/yy"><button>three three three</button></a>
+      <a href="/three/three/zz"><button >three three three four</button></a> <br />
+      <br>   <br>
       <a href="/three/three/yy/one"><button >three three three one</button></a> <br />
+    
       <br />
 
       <button @click=${this.routeP}>programatic</button>

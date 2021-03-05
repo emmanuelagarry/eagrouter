@@ -11,8 +11,8 @@ export const pathMatchKey = {
 };
 
 export const stringToHTML = (str: string) => {
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(str, "text/html");
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, "text/html");
   return doc.body.firstElementChild!;
 };
 
@@ -29,11 +29,6 @@ export const guardHandler = async (
     : await Promise.resolve(guard);
 
   //  End function if the resolved value is false and replace path with old path
-  if (!guardResolved) {
-    if (initiator === "parent") {
-      // history.back();
-    }
-  }
   return guardResolved;
 };
 

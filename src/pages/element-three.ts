@@ -6,9 +6,9 @@ export class ElementThree extends LitElement {
   @property()
   name = "element-three";
 
-  createRenderRoot(){
-    return this
-  }
+  // createRenderRoot(){
+  //   return this
+  // }
 
   routes: Route[] = [
     {

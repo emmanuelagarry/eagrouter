@@ -12,12 +12,14 @@ export class ElementTwo extends LitElement {
       component: "<element-one></element-one>",
       bundle: () => import("../pages/element-one"),
     },
+    {
+      path: "/three/three/zz",
+      component: "<element-four></element-four>",
+      bundle: () => import("../pages/element-four"),
+    },
   ];
 
 
-  createRenderRoot(){
-    return this
-  }
 
   connectedCallback(){
     super.connectedCallback()
