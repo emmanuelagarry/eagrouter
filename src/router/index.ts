@@ -2,7 +2,7 @@ import { LitElement, property } from "lit-element";
 
 import page from "page";
 import { BehaviorSubject, Subject } from "rxjs";
-import type { Subscription, Observable } from "rxjs";
+import type { Observable } from "rxjs";
 import {
   distinctUntilChanged,
   map,
@@ -11,8 +11,9 @@ import {
   scan,
   startWith,
   skip,
-  buffer,
   filter,
+  throttleTime,
+  throttle,
 } from "rxjs/operators";
 
 import { pathToRegexp } from "./utils/path-to-regex";
@@ -59,8 +60,7 @@ export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
 
 const pageFoundSubject$ = new BehaviorSubject(false);
 const pageFound$ = pageFoundSubject$.pipe(
-  buffer(navigationEvents$.pipe(filter((env) => env === "navEnd"))),
-  map((buf) => buf[buf.length - 1])
+  throttle(() => navigationEvents$.pipe(filter((env) => env === "navEnd")))
 );
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
@@ -105,8 +105,6 @@ export class EagRouter extends RouterMix(LitElement) {
   constructor() {
     super();
   }
-  // set div as the base element
-  // private element: Element = stringToHTML("<div></div>");
   routes: Route[] = [];
   base: string = "";
   createRenderRoot() {
@@ -124,6 +122,7 @@ export class EagRouter extends RouterMix(LitElement) {
 
     this.addToSub(
       pageFound$.pipe(
+        throttleTime(500),
         tap((found) => {
           if (found === false) {
             this.dispatchEvent(newCustomEvent);
@@ -131,10 +130,6 @@ export class EagRouter extends RouterMix(LitElement) {
         })
       )
     );
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
   }
 
   installRoute() {
@@ -178,40 +173,34 @@ export class EagRouter extends RouterMix(LitElement) {
       // pageFoundSubject$.next(true);
 
       latestRouterPathSubject$.next(context.pathname!);
-      queryStringSubject$.next(context.querystring!);
       if (oldPath.startsWith(elem.path)) {
-       
+        queryStringSubject$.next(context.querystring!);
         return;
       }
 
       pendingSubject$.next(1);
 
-      // Resolve bundle if bundle exist.
-      if (elem?.bundle) {
-        if (!resolved.has(elem.bundle())) {
-          await elem.bundle();
-        }
-      }
-
-      const oldElem = this.element;
-      this.element = stringToHTML(elem.component || "<div></div>");
-
-      this.requestUpdate("element", oldElem);
-
-      // Using intersection observr to check when element is loaded
-
+      // Resolve bundle if bundle exist and also reolve component.
+      const theElement = await this.resolveBundle(elem, resolved);
       this.observerHandler(
+        theElement,
         pageFoundSubject$,
         myWindow,
         pendingSubject$,
         context.querystring!,
-        queryStringSubject$
+        1,
+        queryStringSubject$,
+        "parent"
       );
       oldPath = elem.path;
     } catch (error) {
       console.error(error);
       pendingSubject$.next(-1);
     }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
   }
   render() {
     return this.element;
@@ -222,7 +211,6 @@ customElements.define("eag-router", EagRouter);
 //  Child router
 export class EagRouterChild extends RouterMix(LitElement) {
   private pathMatch = "eagPathMatch";
-
   private latestPath$ = latestRouterPath$.pipe(
     tap((route) => {
       if (route) {
@@ -234,9 +222,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
   @property()
   routes: Route[] = [];
 
-  @property()
-  initialPath: string | null = null;
-
   createRenderRoot() {
     return this;
   }
@@ -245,34 +230,27 @@ export class EagRouterChild extends RouterMix(LitElement) {
     super.connectedCallback();
     this.addToSub(this.latestPath$);
   }
-  childRouterCheck() {
-    return (
-      this.element.querySelector<EagRouterChild>("eag-router-child") ||
-      this.element?.shadowRoot?.querySelector<EagRouterChild>(
-        "eag-router-child"
-      )
-    );
-  }
 
   disconnectedCallback() {
     super.disconnectedCallback();
   }
 
   async renderView(path: string) {
-    // if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
-    //   const childRouter = this.childRouterCheck()
-    //   return;
-    // }
+    
+    if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
+      queueMicrotask(() => pendingSubject$.next(0));
+      return;
+    }
     try {
       const elem = this.routes.find((route) =>
         pathToRegexp(route.path, [pathMatchKey]).test(path)
       );
-
       if (!elem) {
         this.pathMatch = "eagPathMatch";
         this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
         this.requestUpdate();
         pageFoundSubject$.next(false);
+        pendingSubject$.next(0);
         return;
       }
       this.pathMatch = elem.path;
@@ -289,26 +267,18 @@ export class EagRouterChild extends RouterMix(LitElement) {
 
       //increment pending count
       pendingSubject$.next(1);
-      // Resolve bundle if bundle exist.
-      if (elem?.bundle) {
-        if (!resolved.has(elem.bundle())) {
-          await elem.bundle();
-        }
-      }
-      // Create new element and update element
 
-      const oldElem = this.element;
-      this.element = stringToHTML(
-        elem.component || "<eag-router-empty></eag-router-empty>"
-      );
-      this.requestUpdate("element", oldElem);
+      // Resolve bundle if bundle exist and also reolve component.
+      const theElement = await this.resolveBundle(elem, resolved);
+
       // Using intersection observer to check when element is loaded
-
       this.observerHandler(
+        theElement,
         pageFoundSubject$,
         myWindow,
         pendingSubject$,
         "",
+        this.pendingCount,
         queryStringSubject$
       );
     } catch (error) {

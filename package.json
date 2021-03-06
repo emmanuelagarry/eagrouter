@@ -1,6 +1,6 @@
 {
   "name": "eagrouter",
-  "version": "2.1.3",
+  "version": "2.1.7",
   "description": "The Coolest web component router",
   "main": "lib/index.js",
   "scripts": {
