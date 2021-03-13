@@ -13,10 +13,12 @@ export class ElementThree extends LitElement {
   routes: Route[] = [
     {
       path: "/three/three",
+      experimentalPath: '/three',
       component: "<element-one></element-one>",
     },
     {
       path: "/three/three/*",
+       experimentalPath: '/three/*',
       component: "<element-two></element-two>",
       bundle: () => import("../../src/pages/element-two"),
     },

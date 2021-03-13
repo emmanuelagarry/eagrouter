@@ -39,7 +39,6 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
       myWindow: Window,
       pendingSubject$: Subject<number>,
       contextQuerystring: string = "",
-      elementPath: string,
       queryStringSubject$: BehaviorSubject<string> | null = null,
       parentOrchild: "parent" | "child" = "child"
     ) {
@@ -53,12 +52,6 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
         if (childRouter === null || childRouter === undefined) {
           pageFoundSubject$.next(true);
         } 
-        else {
-          const parentPath = routStringFormatter(elementPath)
-          childRouter.setParentPath = parentPath
-          console.log(parentPath)
-        }
-
         // Decrement pending count
         pendingSubject$.next(-1);
         if (parentOrchild === "parent") {

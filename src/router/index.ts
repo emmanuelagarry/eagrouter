@@ -30,6 +30,7 @@ export type NavState = "navStart" | "navEnd" | "navCold";
 
 export interface Route {
   path: string;
+  experimentalPath: string;
   redirect?: string;
   component?: string;
   bundle?: () => Promise<any>;
@@ -120,9 +121,9 @@ export class EagRouter extends RouterMix(LitElement) {
       composed: true,
     });
 
-    navigationEvents$.subscribe((item) => {
-      console.log(item);
-    });
+    // navigationEvents$.subscribe((item) => {
+    //   console.log(item);
+    // });
     this.addToSub(
       pageFound$.pipe(
         throttleTime(500),
@@ -182,7 +183,6 @@ export class EagRouter extends RouterMix(LitElement) {
       }
 
       pendingSubject$.next(1);
-
       // Resolve bundle if bundle exist and also reolve component.
       const theElement = await this.resolveBundle(elem, resolved);
       this.observerHandler(
@@ -191,7 +191,6 @@ export class EagRouter extends RouterMix(LitElement) {
         myWindow,
         pendingSubject$,
         context.querystring!,
-        elem.path,
         queryStringSubject$,
         "parent"
       );
@@ -222,14 +221,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
     })
   );
 
-  private parentPath = "";
-  get getParentPath() {
-    return this.parentPath;
-  }
-
-  set setParentPath(parentPath: string) {
-    this.parentPath = parentPath;
-  }
 
   createRenderRoot() {
     return this;
@@ -288,7 +279,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
         myWindow,
         pendingSubject$,
         "",
-        this.parentPath + elem.path,
         queryStringSubject$
       );
     } catch (error) {

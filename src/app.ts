@@ -10,16 +10,20 @@ export class App extends LitElement {
   routes: Route[] = [
     {
       path: "",
+      experimentalPath: "",
       redirect: "/one",
+     
     },
 
     {
       path: "/one",
+      experimentalPath: "/one",
       component: "<element-one></element-one>",
     },
 
     {
       path: "/two",
+      experimentalPath: "/two",
       component: "<element-two></element-two>",
       bundle: () => import("../src/pages/element-two"),
       guard: () => {
@@ -31,17 +35,22 @@ export class App extends LitElement {
     },
     {
       path: "/three",
+      experimentalPath: "/three",
+
       component: "<element-three></element-three>",
       bundle: () => import("../src/pages/element-three"),
     },
     {
       path: "/three/*",
+      experimentalPath: "/three/*",
+
       component: "<element-three></element-three>",
       bundle: () => import("../src/pages/element-three"),
     },
 
     {
       path: "*",
+      experimentalPath: "*",
       component: "<page-not-found></page-not-found>",
       bundle: () => import("../src/pages/page-not-found"),
     },
