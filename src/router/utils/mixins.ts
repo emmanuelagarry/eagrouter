@@ -1,14 +1,14 @@
 import type { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 import type { EagRouterChild, Route } from "..";
-import { stringToHTML } from "./helper-fuctions";
+  import { stringToHTML, routStringFormatter} from "./helper-fuctions";
 
 type Constructor<T = any> = new (...args: any[]) => T;
 
 export const RouterMix = <T extends Constructor>(Base: T) =>
   class extends Base {
     subScriptions: Subscription[] = [];
+    routes: Route[] = [];
     element: Element = stringToHTML("<eag-router-empty></eag-router-empty>");
-
     connectedCallback() {
       super.connectedCallback();
     }
@@ -39,7 +39,7 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
       myWindow: Window,
       pendingSubject$: Subject<number>,
       contextQuerystring: string = "",
-      pendingCount: number,
+      elementPath: string,
       queryStringSubject$: BehaviorSubject<string> | null = null,
       parentOrchild: "parent" | "child" = "child"
     ) {
@@ -52,8 +52,11 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
 
         if (childRouter === null || childRouter === undefined) {
           pageFoundSubject$.next(true);
-        } else {
-          childRouter.setPendingCount = pendingCount;
+        } 
+        else {
+          const parentPath = routStringFormatter(elementPath)
+          childRouter.setParentPath = parentPath
+          console.log(parentPath)
         }
 
         // Decrement pending count

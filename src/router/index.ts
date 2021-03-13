@@ -13,7 +13,7 @@ import {
   skip,
   filter,
   throttleTime,
-  throttle,
+  buffer,
 } from "rxjs/operators";
 
 import { pathToRegexp } from "./utils/path-to-regex";
@@ -60,7 +60,8 @@ export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
 
 const pageFoundSubject$ = new BehaviorSubject(false);
 const pageFound$ = pageFoundSubject$.pipe(
-  throttle(() => navigationEvents$.pipe(filter((env) => env === "navEnd")))
+  buffer(navigationEvents$.pipe(filter((env) => env === "navEnd"))),
+  map((item) => item[item.length - 1])
 );
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
@@ -105,7 +106,6 @@ export class EagRouter extends RouterMix(LitElement) {
   constructor() {
     super();
   }
-  routes: Route[] = [];
   base: string = "";
   createRenderRoot() {
     return this;
@@ -120,6 +120,9 @@ export class EagRouter extends RouterMix(LitElement) {
       composed: true,
     });
 
+    navigationEvents$.subscribe((item) => {
+      console.log(item);
+    });
     this.addToSub(
       pageFound$.pipe(
         throttleTime(500),
@@ -188,7 +191,7 @@ export class EagRouter extends RouterMix(LitElement) {
         myWindow,
         pendingSubject$,
         context.querystring!,
-        1,
+        elem.path,
         queryStringSubject$,
         "parent"
       );
@@ -219,8 +222,14 @@ export class EagRouterChild extends RouterMix(LitElement) {
     })
   );
 
-  @property()
-  routes: Route[] = [];
+  private parentPath = "";
+  get getParentPath() {
+    return this.parentPath;
+  }
+
+  set setParentPath(parentPath: string) {
+    this.parentPath = parentPath;
+  }
 
   createRenderRoot() {
     return this;
@@ -236,9 +245,9 @@ export class EagRouterChild extends RouterMix(LitElement) {
   }
 
   async renderView(path: string) {
-    
     if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
-      queueMicrotask(() => pendingSubject$.next(0));
+      // queueMicrotask(() => pendingSubject$.next(0));
+      setTimeout(() => pendingSubject$.next(0));
       return;
     }
     try {
@@ -250,7 +259,8 @@ export class EagRouterChild extends RouterMix(LitElement) {
         this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
         this.requestUpdate();
         pageFoundSubject$.next(false);
-        pendingSubject$.next(0);
+        // queueMicrotask(() => pendingSubject$.next(0));
+        setTimeout(() => pendingSubject$.next(0));
         return;
       }
       this.pathMatch = elem.path;
@@ -278,7 +288,7 @@ export class EagRouterChild extends RouterMix(LitElement) {
         myWindow,
         pendingSubject$,
         "",
-        this.pendingCount,
+        this.parentPath + elem.path,
         queryStringSubject$
       );
     } catch (error) {
