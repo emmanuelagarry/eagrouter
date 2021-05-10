@@ -1,4 +1,4 @@
-import { LitElement, html} from "lit";
+import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import type { Route } from "./router";
@@ -12,20 +12,16 @@ export class App extends LitElement {
   routes: Route[] = [
     {
       path: "",
-      experimentalPath: "",
       redirect: "/one",
-     
     },
 
     {
       path: "/one",
-      experimentalPath: "/one",
       component: "<element-one></element-one>",
     },
 
     {
       path: "/two",
-      experimentalPath: "/two",
       component: "<element-two></element-two>",
       bundle: () => import("../src/pages/element-two"),
       guard: () => {
@@ -37,14 +33,12 @@ export class App extends LitElement {
     },
     {
       path: "/three",
-      experimentalPath: "/three",
 
       component: "<element-three></element-three>",
       bundle: () => import("../src/pages/element-three"),
     },
     {
       path: "/three/*",
-      experimentalPath: "/three/*",
 
       component: "<element-three></element-three>",
       bundle: () => import("../src/pages/element-three"),
@@ -52,7 +46,6 @@ export class App extends LitElement {
 
     {
       path: "*",
-      experimentalPath: "*",
       component: "<page-not-found></page-not-found>",
       bundle: () => import("../src/pages/page-not-found"),
     },
@@ -90,10 +83,13 @@ export class App extends LitElement {
       <a href="/three"><button>three</button></a
       ><a href="/three/three"><button>three three</button></a
       ><a href="/three/three/yy"><button>three three three</button></a>
-      <a href="/three/three/zz"><button >three three three four</button></a> <br />
-      <br>   <br>
-      <a href="/three/three/yy/one"><button >three three three one</button></a> <br />
-    
+      <a href="/three/three/zz"><button>three three three four</button></a>
+      <br />
+      <br />
+      <br />
+      <a href="/three/three/yy/one"><button>three three three one</button></a>
+      <br />
+
       <br />
 
       <button @click=${this.routeP}>programatic</button>

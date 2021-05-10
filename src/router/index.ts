@@ -29,7 +29,6 @@ export type NavState = "navStart" | "navEnd" | "navCold";
 
 export interface Route {
   path: string;
-  experimentalPath: string;
   redirect?: string;
   component?: string;
   bundle?: () => Promise<any>;
