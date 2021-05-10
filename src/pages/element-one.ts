@@ -1,37 +1,29 @@
-import { LitElement, html, customElement, css, property } from "lit-element";
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
 import { styles } from "../css";
 @customElement("element-one")
 export class ElementOne extends LitElement {
-
-
-  static get styles() {
-  
-    return [styles];
-      
-    
-  }
+  static styles = styles
   @property()
   name = "element-one";
 
-  connectedCallback(){
-    super.connectedCallback()
-    console.log(sessionStorage.getItem('emmanuel'))
+  connectedCallback() {
+    super.connectedCallback();
+    console.log(sessionStorage.getItem("emmanuel"));
   }
-  disconnectedCallback(){
-    super.disconnectedCallback()
+  disconnectedCallback() {
+    super.disconnectedCallback();
   }
   myFunction() {}
   render() {
-
-    
     return html`
-    <!-- <style>
+      <!-- <style>
     .tester{
           border: 2px solid yellow
         }</style> -->
-    
-     <button class="tester" @click=${this.myFunction}>one</button>
-    
+
+      <button class="tester" @click=${this.myFunction}>one</button>
     `;
   }
 }

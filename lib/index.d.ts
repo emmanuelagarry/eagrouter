@@ -1,11 +1,12 @@
 /// <reference types="page" />
-import { LitElement } from "lit-element";
+import { LitElement } from "lit";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { Observable } from "rxjs";
 import type { Context } from "./utils/interfaces";
 export declare type NavState = "navStart" | "navEnd" | "navCold";
 export interface Route {
     path: string;
+    experimentalPath: string;
     redirect?: string;
     component?: string;
     bundle?: () => Promise<any>;
@@ -24,17 +25,17 @@ declare const EagRouter_base: {
     new (...args: any[]): {
         [x: string]: any;
         subScriptions: import("rxjs").Subscription[];
+        routes: Route[];
         element: Element;
         connectedCallback(): void;
         addToSub(sub: Observable<any>): void;
         resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: BehaviorSubject<boolean>, myWindow: Window, pendingSubject$: Subject<number>, contextQuerystring: string | undefined, pendingCount: number, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
+        observerHandler(theElement: Element, pageFoundSubject$: BehaviorSubject<boolean>, myWindow: Window, pendingSubject$: Subject<number>, contextQuerystring?: string, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
         disconnectedCallback(): void;
     };
 } & typeof LitElement;
 export declare class EagRouter extends EagRouter_base {
     constructor();
-    routes: Route[];
     base: string;
     createRenderRoot(): this;
     connectedCallback(): void;
@@ -47,18 +48,18 @@ declare const EagRouterChild_base: {
     new (...args: any[]): {
         [x: string]: any;
         subScriptions: import("rxjs").Subscription[];
+        routes: Route[];
         element: Element;
         connectedCallback(): void;
         addToSub(sub: Observable<any>): void;
         resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: BehaviorSubject<boolean>, myWindow: Window, pendingSubject$: Subject<number>, contextQuerystring: string | undefined, pendingCount: number, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
+        observerHandler(theElement: Element, pageFoundSubject$: BehaviorSubject<boolean>, myWindow: Window, pendingSubject$: Subject<number>, contextQuerystring?: string, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
         disconnectedCallback(): void;
     };
 } & typeof LitElement;
 export declare class EagRouterChild extends EagRouterChild_base {
     private pathMatch;
     private latestPath$;
-    routes: Route[];
     createRenderRoot(): this;
     connectedCallback(): void;
     disconnectedCallback(): void;

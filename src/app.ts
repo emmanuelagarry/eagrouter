@@ -1,4 +1,6 @@
-import { LitElement, html, customElement, property } from "lit-element";
+import { LitElement, html} from "lit";
+import { customElement, property } from "lit/decorators.js";
+
 import type { Route } from "./router";
 import { routerHistory, navigationEvents$ } from "./router";
 

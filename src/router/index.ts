@@ -1,5 +1,4 @@
-import { LitElement, property } from "lit-element";
-
+import { LitElement } from "lit";
 import page from "page";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { Observable } from "rxjs";
@@ -221,7 +220,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
     })
   );
 
-
   createRenderRoot() {
     return this;
   }
@@ -237,8 +235,8 @@ export class EagRouterChild extends RouterMix(LitElement) {
 
   async renderView(path: string) {
     if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
-      // queueMicrotask(() => pendingSubject$.next(0));
-      setTimeout(() => pendingSubject$.next(0));
+      queueMicrotask(() => pendingSubject$.next(0));
+      // setTimeout(() => pendingSubject$.next(0));
       return;
     }
     try {
@@ -247,11 +245,12 @@ export class EagRouterChild extends RouterMix(LitElement) {
       );
       if (!elem) {
         this.pathMatch = "eagPathMatch";
+        const oldElemNotFound = this.element;
         this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
-        this.requestUpdate();
+        this.requestUpdate("element", oldElemNotFound);
         pageFoundSubject$.next(false);
-        // queueMicrotask(() => pendingSubject$.next(0));
-        setTimeout(() => pendingSubject$.next(0));
+        queueMicrotask(() => pendingSubject$.next(0));
+        // setTimeout(() => pendingSubject$.next(0));
         return;
       }
       this.pathMatch = elem.path;

@@ -1,6 +1,6 @@
 import type { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 import type { EagRouterChild, Route } from "..";
-  import { stringToHTML, routStringFormatter} from "./helper-fuctions";
+  import { stringToHTML} from "./helper-fuctions";
 
 type Constructor<T = any> = new (...args: any[]) => T;
 
