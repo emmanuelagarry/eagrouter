@@ -1,3 +1,4 @@
+/// <reference types="page" />
 import { LitElement } from "lit";
 import type { Observable } from "rxjs";
 import type { Context } from "./utils/interfaces";
@@ -10,7 +11,7 @@ export interface Route {
     bundle?: () => Promise<any>;
     guard?: () => Observable<boolean> | Promise<boolean> | boolean;
 }
-export declare const navigationEvents$: Observable<string>;
+export declare const navigationEvents$: Observable<NavState>;
 export declare const queryString$: any;
 export declare const param$: (id: string) => any;
 export declare const outlet: (location: string) => void;

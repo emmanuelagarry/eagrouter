@@ -1,5 +1,4 @@
-import { isObservable, Observable } from "rxjs";
-import { take } from "rxjs/operators";
+import { isObservable, Observable, firstValueFrom } from "rxjs";
 
 export const pathMatchKey = {
   delimiter: "/",
@@ -26,7 +25,7 @@ export const guardHandler = async (
 
   //  Check if guard is an observable or promise and resolve it
   const guardResolved = isObservable(guard)
-    ? await guard.pipe(take(1)).toPromise()
+    ? await firstValueFrom(guard)
     : await Promise.resolve(guard);
 
   //  End function if the resolved value is false and replace path with old path

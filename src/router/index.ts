@@ -51,8 +51,8 @@ const queryStringSubject$ = new BehaviorSubject("");
 const latestRouterPathSubject$ = new BehaviorSubject<string>("");
 
 // Exposes navigation events
-export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
-  scan((acc, curr) => acc + curr, 0),
+export const navigationEvents$: Observable<string> = pendingSubject$.pipe(
+  scan((acc: number, curr: number) => acc + curr, 0),
   map((num) => (num === 0 ? "navEnd" : "navStart")),
   startWith("navCold" as NavState),
   shareReplay(1)
@@ -61,7 +61,7 @@ export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
 const pageFoundSubject$ = new BehaviorSubject(false);
 const pageFound$ = pageFoundSubject$.pipe(
   buffer(navigationEvents$.pipe(filter((env) => env === "navEnd"))),
-  map((item) => item[item.length - 1])
+  map((item: boolean[]) => item[item.length - 1])
 );
 // Exposes full query string
 export const queryString$ = queryStringSubject$.pipe(
@@ -72,7 +72,7 @@ export const queryString$ = queryStringSubject$.pipe(
 
 // Exposes query string of particular element
 export const param$ = (id: string) =>
-  queryString$.pipe(map((query) => new URLSearchParams(query).get(id)));
+  queryString$.pipe(map((query: string) => new URLSearchParams(query).get(id)));
 
 // exposes page router for navigating programatically
 
@@ -213,7 +213,7 @@ customElements.define("eag-router", EagRouter);
 export class EagRouterChild extends RouterMix(LitElement) {
   private pathMatch = "eagPathMatch";
   private latestPath$ = latestRouterPath$.pipe(
-    tap((route) => {
+    tap((route: string) => {
       if (route) {
         this.renderView(route);
       }

@@ -4,13 +4,12 @@
       "module": "esnext",
       "target": "esnext",
       "moduleResolution": "node",
-      "jsx": "preserve",
       "baseUrl": "./",
       /* LitElement - Add decorator support! */
       "experimentalDecorators": true,
       "emitDecoratorMetadata": true,
       /* Additional Options */
-      "strict": true,
+      "strict": false,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
@@ -20,6 +19,5 @@
       "lib": ["es2015", "esnext", "DOM"],
       "declaration": true,
     },
-
   }
   
