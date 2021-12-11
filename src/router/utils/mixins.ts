@@ -36,7 +36,6 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
     observerHandler(
       theElement: Element,
       pageFoundSubject$: BehaviorSubject<boolean>,
-      myWindow: Window,
       pendingSubject$: Subject<number>,
       contextQuerystring: string = "",
       queryStringSubject$: BehaviorSubject<string> | null = null,
@@ -57,7 +56,7 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
         if (parentOrchild === "parent") {
           queryStringSubject$?.next(contextQuerystring);
         }
-        myWindow.scrollTo(0, 0);
+        this.scrollTop = 0
         observer.disconnect();
       });
       observer.observe(theElement);

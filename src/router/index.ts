@@ -36,7 +36,7 @@ export interface Route {
 }
 
 let oldPath: string = "--";
-const myWindow = window;
+
 
 // Save lazy loaded modules in weak set
 const resolved = new WeakSet();
@@ -156,6 +156,7 @@ export class EagRouter extends RouterMix(LitElement) {
         (route) => route.path === context.routePath!
       );
 
+      
       // Check if there is a guard
       const guardExist = elem?.guard;
 
@@ -184,7 +185,6 @@ export class EagRouter extends RouterMix(LitElement) {
       this.observerHandler(
         theElement,
         pageFoundSubject$,
-        myWindow,
         pendingSubject$,
         context.querystring!,
         queryStringSubject$,
@@ -272,7 +272,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
       this.observerHandler(
         theElement,
         pageFoundSubject$,
-        myWindow,
         pendingSubject$,
         "",
         queryStringSubject$
