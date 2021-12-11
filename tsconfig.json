@@ -9,15 +9,17 @@
       "experimentalDecorators": true,
       "emitDecoratorMetadata": true,
       /* Additional Options */
-      "strict": false,
+      "strict": true,
       "skipLibCheck": true,
+      "noImplicitAny": false,
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
       "allowSyntheticDefaultImports": true,
       "importsNotUsedAsValues": "error",
       "outDir": "./lib",
-      "lib": ["es2015", "esnext", "DOM"],
+      "lib": ["esnext", "DOM"],
       "declaration": true,
+      "esModuleInterop": true
     },
   }
   

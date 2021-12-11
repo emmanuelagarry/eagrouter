@@ -50,7 +50,7 @@ const queryStringSubject$ = new BehaviorSubject("");
 const latestRouterPathSubject$ = new BehaviorSubject<string>("");
 
 // Exposes navigation events
-export const navigationEvents$: Observable<string> = pendingSubject$.pipe(
+export const navigationEvents$: Observable<NavState> = pendingSubject$.pipe(
   scan((acc: number, curr: number) => acc + curr, 0),
   map((num) => (num === 0 ? "navEnd" : "navStart")),
   startWith("navCold" as NavState),
@@ -63,22 +63,23 @@ const pageFound$ = pageFoundSubject$.pipe(
   map((item: boolean[]) => item[item.length - 1])
 );
 // Exposes full query string
-export const queryString$ = queryStringSubject$.pipe(
+export const queryString$: Observable<string> = queryStringSubject$.pipe(
   skip(1),
   distinctUntilChanged(),
   shareReplay(1)
 );
 
 // Exposes query string of particular element
-export const param$ = (id: string) =>
+export const param$ = (id: string):  Observable<string | null>  =>
   queryString$.pipe(map((query: string) => new URLSearchParams(query).get(id)));
 
 // exposes page router for navigating programatically
 
 // This will be deprecated soon
-export const outlet = (location: string) => page.show(location);
+/** @deprecated */
+export const outlet = (location: string): void => page.show(location);
 
-const push = (location: string) => page.show(location);
+const push = (location: string): void => page.show(location);
 const replace = (
   path: string,
   state?: any,
@@ -95,7 +96,7 @@ Object.freeze(routerHistory);
 
 // Exposes later router path
 
-export const latestRouterPath$ = latestRouterPathSubject$.pipe(
+export const latestRouterPath$:  Observable<string> = latestRouterPathSubject$.pipe(
   distinctUntilChanged(),
   shareReplay(1)
 );
@@ -119,9 +120,6 @@ export class EagRouter extends RouterMix(LitElement) {
       composed: true,
     });
 
-    // navigationEvents$.subscribe((item) => {
-    //   console.log(item);
-    // });
     this.addToSub(
       pageFound$.pipe(
         throttleTime(500),

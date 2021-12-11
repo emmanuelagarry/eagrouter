@@ -1,24 +1,25 @@
+/// <reference types="page" />
 import { LitElement } from "lit";
 import type { Observable } from "rxjs";
 import type { Context } from "./utils/interfaces";
 export declare type NavState = "navStart" | "navEnd" | "navCold";
 export interface Route {
     path: string;
-    experimentalPath: string;
     redirect?: string;
     component?: string;
     bundle?: () => Promise<any>;
     guard?: () => Observable<boolean> | Promise<boolean> | boolean;
 }
-export declare const navigationEvents$: Observable<string>;
-export declare const queryString$: any;
-export declare const param$: (id: string) => any;
+export declare const navigationEvents$: Observable<NavState>;
+export declare const queryString$: Observable<string>;
+export declare const param$: (id: string) =>  Observable<string | null> ;
+/** @deprecated */
 export declare const outlet: (location: string) => void;
 export declare const routerHistory: {
     push: (location: string) => void;
     replace: (path: string, state?: any, init?: boolean | undefined, dispatch?: boolean | undefined) => PageJS.Context;
 };
-export declare const latestRouterPath$: any;
+export declare const latestRouterPath$: Observable<string>;
 declare const EagRouter_base: {
     new (...args: any[]): {
         [x: string]: any;

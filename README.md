@@ -59,7 +59,7 @@ export class AppRoot extends LitElement {
 
     // use * for pages with routes that don't match.
     {
-      path: "*",
+      path: "/*",
       component: "<page-not-found></page-not-found>",
       bundle: () => import("./pages/page-not-found"),
     },

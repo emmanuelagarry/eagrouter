@@ -34,7 +34,7 @@ var PATH_REGEXP: RegExp = new RegExp(
  * @return {Array}
  */
 function parse(str: string): Array<any> {
-  var tokens = [];
+  var tokens: any[] = [];
   var key = 0;
   var index = 0;
   var path = "";
@@ -288,7 +288,7 @@ function arrayToRegexp(
   keys: Array<any>,
   options: object
 ): RegExp {
-  var parts = [];
+  var parts: any[]= [];
 
   for (var i = 0; i < path.length; i++) {
     parts.push(pathToRegexp(path[i], keys, options).source);

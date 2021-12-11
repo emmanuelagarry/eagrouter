@@ -1,9 +1,5 @@
 {
-  "compilerOptions": {
-    "types": [],
-    "strict": false,
-
-  },
+ 
     "extends": "./tsconfig.json",
     "include": ["src/router/**/*"],
 

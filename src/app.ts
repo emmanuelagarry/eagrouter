@@ -69,6 +69,13 @@ export class App extends LitElement {
   }
   routeP2() {
     routerHistory.push("/three/three/yy/ll");
+
+
+  
+
+
+
+    
   }
 
   routeP3() {
