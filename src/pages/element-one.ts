@@ -8,8 +8,11 @@ export class ElementOne extends LitElement {
   @property()
   name = "element-one";
 
+  propTest;
+
   connectedCallback() {
     super.connectedCallback();
+    console.log({propTest: this.propTest})
     console.log(sessionStorage.getItem("emmanuel"));
   }
   disconnectedCallback() {

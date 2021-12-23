@@ -21,6 +21,18 @@ export class App extends LitElement {
     },
 
     {
+      path: "/two/*",
+      component: "<element-two></element-two>",
+      bundle: () => import("../src/pages/element-two"),
+      // guard: () => {
+      //   return new Promise((resolve, _) => {
+      //     alert(false);
+      //     resolve(false);
+      //   });
+      // },
+    },
+
+    {
       path: "/two",
       component: "<element-two></element-two>",
       bundle: () => import("../src/pages/element-two"),
@@ -33,8 +45,7 @@ export class App extends LitElement {
     },
     {
       path: "/three",
-
-      component: "<element-three></element-three>",
+      component: "<element-three></element-three >",
       bundle: () => import("../src/pages/element-three"),
     },
     {

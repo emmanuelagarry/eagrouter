@@ -6,7 +6,6 @@ import {
   distinctUntilChanged,
   map,
   shareReplay,
-  tap,
   scan,
   startWith,
   skip,
@@ -33,10 +32,11 @@ export interface Route {
   component?: string;
   bundle?: () => Promise<any>;
   guard?: () => Observable<boolean> | Promise<boolean> | boolean;
+  props? : {key: string, value: any}[];
 }
 
 let oldPath: string = "--";
-
+let oldFullPath = "";
 
 // Save lazy loaded modules in weak set
 const resolved = new WeakSet();
@@ -70,7 +70,7 @@ export const queryString$: Observable<string> = queryStringSubject$.pipe(
 );
 
 // Exposes query string of particular element
-export const param$ = (id: string):  Observable<string | null>  =>
+export const param$ = (id: string): Observable<string | null> =>
   queryString$.pipe(map((query: string) => new URLSearchParams(query).get(id)));
 
 // exposes page router for navigating programatically
@@ -96,10 +96,8 @@ Object.freeze(routerHistory);
 
 // Exposes later router path
 
-export const latestRouterPath$:  Observable<string> = latestRouterPathSubject$.pipe(
-  distinctUntilChanged(),
-  shareReplay(1)
-);
+export const latestRouterPath$: Observable<string> =
+  latestRouterPathSubject$.pipe(distinctUntilChanged(), shareReplay(1));
 
 // Create lit element componenent
 export class EagRouter extends RouterMix(LitElement) {
@@ -107,6 +105,7 @@ export class EagRouter extends RouterMix(LitElement) {
     super();
   }
   base: string = "";
+  exactPathMatch = false;
   createRenderRoot() {
     return this;
   }
@@ -120,15 +119,14 @@ export class EagRouter extends RouterMix(LitElement) {
       composed: true,
     });
 
-    this.addToSub(
-      pageFound$.pipe(
-        throttleTime(500),
-        tap((found) => {
-          if (found === false) {
-            this.dispatchEvent(newCustomEvent);
-          }
-        })
-      )
+    this.addSub(
+      pageFound$.pipe(throttleTime(500)).subscribe((found) => {
+        if (found === false 
+          // && !this.exactPathMatch
+          ) {
+          this.dispatchEvent(newCustomEvent);
+        }
+      })
     );
   }
 
@@ -151,29 +149,56 @@ export class EagRouter extends RouterMix(LitElement) {
 
   // This function changes routes
   async changeRoute(context: Context) {
+  
     try {
       const elem = this.routes.find(
-        (route) => route.path === context.routePath!
+        (route) => {
+          const result = route.path === context.routePath!
+         
+
+          if(result){
+
+            if(route.path === context.canonicalPath || `${route.path}/` ===  context.canonicalPath ){
+              this.exactPathMatch = true
+             
+            } else {
+              this.exactPathMatch = false
+            }
+          
+
+           
+          }
+          return  result
+        }
       );
 
-      
       // Check if there is a guard
       const guardExist = elem?.guard;
 
       if (guardExist) {
         const guard = await guardHandler(guardExist, "parent");
+
         if (!guard) {
+        
+          history.replaceState(null, "", oldFullPath);
           return;
         }
       }
 
       if (!elem) {
+        this.exactPathMatch = false
+        oldPath = `eagPathMatch${Date.now()}`;
+        const oldElemNotFound = this.element;
+        this.element = stringToHTML("<eag-router-empty style='display:none'>nothing to show</eag-router-empty>")
+        this.requestUpdate("element", oldElemNotFound);
         return;
       }
 
       // pageFoundSubject$.next(true);
 
       latestRouterPathSubject$.next(context.pathname!);
+
+      oldFullPath = context.path!;
       if (oldPath.startsWith(elem.path)) {
         queryStringSubject$.next(context.querystring!);
         return;
@@ -209,13 +234,7 @@ customElements.define("eag-router", EagRouter);
 //  Child router
 export class EagRouterChild extends RouterMix(LitElement) {
   private pathMatch = "eagPathMatch";
-  private latestPath$ = latestRouterPath$.pipe(
-    tap((route: string) => {
-      if (route) {
-        this.renderView(route);
-      }
-    })
-  );
+  private latestPath$ = latestRouterPath$.pipe();
 
   createRenderRoot() {
     return this;
@@ -223,7 +242,13 @@ export class EagRouterChild extends RouterMix(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
-    this.addToSub(this.latestPath$);
+    this.addSub(
+      this.latestPath$.subscribe((route) => {
+        if (route) {
+          this.renderView(route);
+        }
+      })
+    );
   }
 
   disconnectedCallback() {
@@ -243,8 +268,13 @@ export class EagRouterChild extends RouterMix(LitElement) {
       if (!elem) {
         this.pathMatch = "eagPathMatch";
         const oldElemNotFound = this.element;
-        this.element = stringToHTML("<eag-router-empty></eag-router-empty>");
+
+
+
+
+        this.element =  stringToHTML("<eag-router-empty style='display:none'>nothing to show</eag-router-empty>");
         this.requestUpdate("element", oldElemNotFound);
+
         pageFoundSubject$.next(false);
         queueMicrotask(() => pendingSubject$.next(0));
         // setTimeout(() => pendingSubject$.next(0));
@@ -261,6 +291,8 @@ export class EagRouterChild extends RouterMix(LitElement) {
           return;
         }
       }
+
+      // this.pathMatch = elem.path;
 
       //increment pending count
       pendingSubject$.next(1);

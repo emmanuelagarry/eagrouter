@@ -8,9 +8,9 @@ export declare const RouterMix: <T extends Constructor<any>>(Base: T) => {
         routes: Route[];
         element: Element;
         connectedCallback(): void;
-        addToSub(sub: any): void;
+        addSub(sub: any): void;
         resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: any, myWindow: Window, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
+        observerHandler(theElement: Element, pageFoundSubject$: any, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: BehaviorSubject<string> | null, parentOrchild?: "parent" | "child"): void;
         disconnectedCallback(): void;
     };
 } & T;

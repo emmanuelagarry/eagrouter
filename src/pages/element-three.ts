@@ -11,11 +11,30 @@ export class ElementThree extends LitElement {
   //   return this
   // }
 
+  propTestParent = 'elemet three'
+
   routes: Route[] = [
+   
     {
       path: "/three/three",
-      component: "<element-one></element-one>",
+      props : [
+        {
+          key: 'propTest',
+          value: 30
+        },
+        {
+          key: 'someKey2',
+          value: 1
+        },
+        {
+          key: 'someKey3',
+          value: 3
+        },
+      ],
+      component: "<element-one class='dope'></element-one>",
     },
+
+
     {
       path: "/three/three/*",
       component: "<element-two></element-two>",

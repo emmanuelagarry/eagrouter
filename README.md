@@ -23,7 +23,7 @@ import "eagrouter";
 
 Use as a normal html tag in your project root, and provide your route config.
 
-This example uses lit-element as a base class. But it works with other web component libraries also.
+This example uses lit-element as a base class. But it works with other web component libraries also. Make sure all routes start with "/".
 
 ```javascript
 import { LitElement, html } from "lit-element";
@@ -134,6 +134,28 @@ export class ProductsPage extends LitElement {
       component: "<products-page-two></products-page-two>",
       path: "/products/pagetwo",
     },
+
+
+// If the component to be rendered has properties, add it the the object like the example shown below. 
+     {
+      component: "<products-page-two></products-page-two>",
+      path: "/products/pagetwo",
+
+
+// Properties added to route here. The route property is an array of objects 
+      props : [
+        {
+          key: 'propNameOne',
+          value: 30
+        },
+        {
+          key: 'propNameTwo',
+          value: 'some value'
+        }
+      ],
+
+     
+    },
   ];
 
   render() {
@@ -180,5 +202,7 @@ return myFirstPromise
 
 ```
 
- You can find me on linkedin to ask for more info. This project is stable but is in aplha state for now.
+
+
+ You can find me on linkedin to ask for more info. This project is stable but is in beta state for now. Please use and drop issues if any on github.
 https://www.linkedin.com/in/emmanuel-agarry-a22931122/

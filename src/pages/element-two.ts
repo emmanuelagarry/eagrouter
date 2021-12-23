@@ -10,14 +10,24 @@ export class ElementTwo extends LitElement {
   name = "element-two";
   routes: Route[] = [
     {
-      path: "/three/three/yy",
+      path: "/two",
       component: "<element-one></element-one>",
       bundle: () => import("../pages/element-one"),
     },
     {
-      path: "/three/three/zz",
-      component: "<element-four></element-four>",
-      bundle: () => import("../pages/element-four"),
+      path: "/two/three/*",
+      component: "<element-one></element-one>",
+      bundle: () => import("../pages/element-one"),
+    },
+    // {
+    //   path: "/three/three/zz",
+    //   component: "<element-four></element-four>",
+    //   bundle: () => import("../pages/element-four"),
+    // },
+    {
+      path: "/three/three/yy",
+      component: "<div></div>",
+      // bundle: () => import("../pages/element-four"),
     },
   ];
 

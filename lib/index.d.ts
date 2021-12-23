@@ -9,10 +9,14 @@ export interface Route {
     component?: string;
     bundle?: () => Promise<any>;
     guard?: () => Observable<boolean> | Promise<boolean> | boolean;
+    props?: {
+        key: string;
+        value: any;
+    }[];
 }
 export declare const navigationEvents$: Observable<NavState>;
 export declare const queryString$: Observable<string>;
-export declare const param$: (id: string) =>  Observable<string | null> ;
+export declare const param$: (id: string) => Observable<string | null>;
 /** @deprecated */
 export declare const outlet: (location: string) => void;
 export declare const routerHistory: {
@@ -27,15 +31,16 @@ declare const EagRouter_base: {
         routes: Route[];
         element: Element;
         connectedCallback(): void;
-        addToSub(sub: any): void;
+        addSub(sub: any): void;
         resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: any, myWindow: Window, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
+        observerHandler(theElement: Element, pageFoundSubject$: any, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
         disconnectedCallback(): void;
     };
 } & typeof LitElement;
 export declare class EagRouter extends EagRouter_base {
     constructor();
     base: string;
+    exactPathMatch: boolean;
     createRenderRoot(): this;
     connectedCallback(): void;
     installRoute(): void;
@@ -50,9 +55,9 @@ declare const EagRouterChild_base: {
         routes: Route[];
         element: Element;
         connectedCallback(): void;
-        addToSub(sub: any): void;
+        addSub(sub: any): void;
         resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: any, myWindow: Window, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
+        observerHandler(theElement: Element, pageFoundSubject$: any, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
         disconnectedCallback(): void;
     };
 } & typeof LitElement;
