@@ -1,6 +1,6 @@
 # This is the coolest web component router
 
-## More documentation coming up later!!!
+## More documentation coming up later
 
 Eagrouter is an easy to use component router for custom elements. It works just like any other custom element. It takes in 2 properties, a route configuration object and an optional route base string. Eagrouter is really a wrapper around [Pagejs](https://github.com/visionmedia/page.js) which is a tiny express-inspired client-side router; if you like pagejs, then you would like Eagrouter. It uses almost all the same api's for declaring routes as pagejs . It also uses rxjs for reactivity and LitElement for handling custom elements. This three libraries combined together makes the router awseome to use.
 
@@ -15,7 +15,6 @@ npm install eagrouter
 ```
 
 > ## Usage
-
 
 ```javascript
 import "eagrouter";
@@ -112,10 +111,13 @@ routerHistory.push("some-route");
 ```
 
 For child paths, use the router child element in the parent component.
+
 ```html
 <eag-router-child></eag-router-child>
 ```
+
 ---
+
 ```javascript
 // ..........
 
@@ -165,10 +167,8 @@ export class ProductsPage extends LitElement {
 
 customElements.define("products-page", ProductsPage);
 ```
-<br>
 
 > ## Router Guards
-
 
 To guard a path; add a guard property to the object in the array. The property should return a boolean value. It can also take an observable or promise that returns a boolean value
 
@@ -202,7 +202,5 @@ return myFirstPromise
 
 ```
 
-
-
  You can find me on linkedin to ask for more info. This project is stable but is in beta state for now. Please use and drop issues if any on github.
-https://www.linkedin.com/in/emmanuel-agarry-a22931122/
+<https://www.linkedin.com/in/emmanuel-agarry-a22931122/>
