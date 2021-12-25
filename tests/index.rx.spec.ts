@@ -2,14 +2,14 @@ import { TestScheduler } from "rxjs/testing";
 
 import { expect, fixture, html } from "@open-wc/testing";
 
-import "../src/router/index";
-import "../src/pages/element-one";
+import "../eagrouter/index";
+import "../demo/pages/element-one"
 import {
   EagRouter,
   Route,
   navigationEvents$,
   NavState,
-} from "../src/router/index";
+} from  "../eagrouter/index";;
 import { Subject } from "rxjs";
 import {
   buffer,
@@ -31,7 +31,7 @@ const routes: Route[] = [
   {
     path: "/two",
     component: "<element-two></element-two>",
-    bundle: () => import("../src/pages/element-two"),
+    bundle: () => import("../demo/pages/element-two"),
   },
   {
     path: "/three",
@@ -56,7 +56,7 @@ describe("Router test", () => {
     it("Navigation events run as expected", async () => {
       const doneSubject$ = new Subject<string>();
       const navgigationEnv: NavState[] = [];
-      navigationEvents$
+      const sub = navigationEvents$
         .pipe(
           buffer(doneSubject$),
           tap((nav) => {
@@ -66,7 +66,7 @@ describe("Router test", () => {
         )
         .subscribe();
       // @ts-ignore
-      await el.changeRoute({ routePath: "/two" });
+      await el.changeRoute({ routePath: "/one" });
       await el.updateComplete;
       const promise = new Promise((resolve, _) => {
         setTimeout(() => {
@@ -75,10 +75,10 @@ describe("Router test", () => {
       });
       await promise;
       doneSubject$.next("done");
-  
-      const expectedNavEvents: NavState[] = ["navCold", "navStart", "navEnd"];
-      expect(navgigationEnv[0] && navgigationEnv[1] && navgigationEnv[2]).to.equal(
-        expectedNavEvents[0] && expectedNavEvents[1] && expectedNavEvents[2]
+
+      const expectedNavEvents: NavState[] = [ "navStart", "navEnd"];
+      expect( navgigationEnv[1] && navgigationEnv[2]).to.equal(
+        expectedNavEvents[1] && expectedNavEvents[2]
       );
     });
   });

@@ -1,8 +1,6 @@
 import { LitElement, html} from "lit";
 import {  property } from "lit/decorators.js";
-import type { Route } from "src/router";
-
-
+import type { Route } from '../../eagrouter'
 export class ElementThree extends LitElement {
   @property()
   name = "element-three";
@@ -38,7 +36,7 @@ export class ElementThree extends LitElement {
     {
       path: "/three/three/*",
       component: "<element-two></element-two>",
-      bundle: () => import("../../src/pages/element-two"),
+      bundle: () => import("../pages/element-two"),
     },
     // {
     //   path: "/three/*",

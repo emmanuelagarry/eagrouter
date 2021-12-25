@@ -1,10 +1,7 @@
 import { LitElement, html} from "lit";
 import { property } from "lit/decorators.js";
 
-import type { Route } from "../router";
-import "../router"
-
-
+import type { Route } from "../../eagrouter";
 export class ElementTwo extends LitElement {
   @property()
   name = "element-two";

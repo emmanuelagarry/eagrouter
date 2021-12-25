@@ -1,10 +1,10 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import type { Route } from "./router";
-import { routerHistory, navigationEvents$ } from "./router";
+import type { Route } from "../eagrouter";
+import { routerHistory, navigationEvents$ } from "../eagrouter";
 
-import "./router";
+import "../eagrouter";
 import "./pages/element-one";
 
 @customElement("app-root")
@@ -23,7 +23,7 @@ export class App extends LitElement {
     {
       path: "/two/*",
       component: "<element-two></element-two>",
-      bundle: () => import("../src/pages/element-two"),
+      bundle: () => import("./pages/element-two"),
       // guard: () => {
       //   return new Promise((resolve, _) => {
       //     alert(false);
@@ -35,7 +35,7 @@ export class App extends LitElement {
     {
       path: "/two",
       component: "<element-two></element-two>",
-      bundle: () => import("../src/pages/element-two"),
+      bundle: () => import("./pages/element-two"),
       guard: () => {
         return new Promise((resolve, _) => {
           alert(false);
@@ -46,19 +46,19 @@ export class App extends LitElement {
     {
       path: "/three",
       component: "<element-three></element-three >",
-      bundle: () => import("../src/pages/element-three"),
+      bundle: () => import("./pages/element-three"),
     },
     {
       path: "/three/*",
 
       component: "<element-three></element-three>",
-      bundle: () => import("../src/pages/element-three"),
+      bundle: () => import("./pages/element-three"),
     },
 
     {
       path: "*",
       component: "<page-not-found></page-not-found>",
-      bundle: () => import("../src/pages/page-not-found"),
+      bundle: () => import("./pages/page-not-found"),
     },
   ];
 

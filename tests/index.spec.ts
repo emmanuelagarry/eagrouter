@@ -1,11 +1,11 @@
 import { spy, stub } from "sinon";
 import { expect, fixture, html, assert } from "@open-wc/testing";
 
-import "../src/router/index";
-import "../src/pages/element-one";
-import "../src/pages/element-three";
+import "../eagrouter/index";
+import "../demo/pages/element-one"
+import "../demo/pages/element-three";
 
-import { EagRouter, Route } from "../src/router/index";
+import { EagRouter, Route } from  "../eagrouter";
 
 const routes: Route[] = [
   {
@@ -21,7 +21,7 @@ const routes: Route[] = [
   {
     path: "/two",
     component: "<element-two></element-two>",
-    bundle: () => import("../src/pages/element-two"),
+    bundle: () => import("../demo/pages/element-two"),
   },
   {
     path: "/three",

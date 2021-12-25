@@ -16,7 +16,7 @@ export interface Route {
 }
 export declare const navigationEvents$: Observable<NavState>;
 export declare const queryString$: Observable<string>;
-export declare const param$: (id: string) => Observable<string | null>;
+export declare const param$: (id: string) => any;
 /** @deprecated */
 export declare const outlet: (location: string) => void;
 export declare const routerHistory: {

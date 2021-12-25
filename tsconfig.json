@@ -1,5 +1,5 @@
 {
-    "include": ["src"],
+    "include": ["eagrouter"],
     "compilerOptions": {
       "module": "esnext",
       "target": "esnext",
@@ -19,7 +19,8 @@
       "outDir": "./lib",
       "lib": ["esnext", "DOM"],
       "declaration": true,
-      "esModuleInterop": true
+      "esModuleInterop": true,
+      "useDefineForClassFields": false
     },
   }
   
