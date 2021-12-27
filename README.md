@@ -56,6 +56,27 @@ export class AppRoot extends LitElement {
       bundle: () => import("./pages/products"),
     },
 
+// If the component to be rendered has properties, add it the the object like the example shown below. 
+     {
+      component: "<products-page-two></products-page-two>",
+      path: "/products/pagetwo",
+
+
+// Properties added to route here. The route property is an array of objects 
+      props : [
+        {
+          key: 'propNameOne',
+          value: 30
+        },
+        {
+          key: 'propNameTwo',
+          value: 'some value'
+        }
+      ],
+
+     
+    },
+
     // use * for pages with routes that don't match.
     {
       path: "/*",
@@ -138,26 +159,7 @@ export class ProductsPage extends LitElement {
     },
 
 
-// If the component to be rendered has properties, add it the the object like the example shown below. 
-     {
-      component: "<products-page-two></products-page-two>",
-      path: "/products/pagetwo",
 
-
-// Properties added to route here. The route property is an array of objects 
-      props : [
-        {
-          key: 'propNameOne',
-          value: 30
-        },
-        {
-          key: 'propNameTwo',
-          value: 'some value'
-        }
-      ],
-
-     
-    },
   ];
 
   render() {

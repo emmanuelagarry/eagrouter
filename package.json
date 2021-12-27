@@ -19,11 +19,10 @@
     "lit": "^2.0.0-rc.2",
     "page": "^1.11.6",
     "rxjs": "^7.4.0"
-  
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.1.5",
-    "@open-wc/testing": "^2.5.32",
+    "@open-wc/testing": "^3.0.3",
     "@types/page": "^1.11.1",
     "@web/dev-server-esbuild": "^0.2.11",
     "@web/test-runner": "^0.12.2",
