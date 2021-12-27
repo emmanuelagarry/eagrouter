@@ -1,14 +1,32 @@
+import type { LitElement } from "lit";
 import type { BehaviorSubject, Subject, Subscription } from "rxjs";
 import type { EagRouterChild, Route } from "..";
 import { stringToHTML } from "./helper-fuctions";
 
-type Constructor<T = any> = new (...args: any[]) => T;
+type Constructor<T = LitElement> = new (...args: any[]) => T;
 
-export const RouterMix = <T extends Constructor>(Base: T) =>
-  class extends Base {
+export declare class RouterElementInterface {
+  subScriptions: Subscription[];
+  routes: Route[];
+  element: Element;
+  addSub(sub: Subscription): void;
+  resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
+  observerHandler(
+    theElement: Element,
+    pageFoundSubject$: BehaviorSubject<boolean>,
+    pendingSubject$: Subject<number>,
+    contextQuerystring?: string,
+    queryStringSubject$?: BehaviorSubject<string> | null,
+    parentOrchild?: "parent" | "child"
+  ): void;
+}
+
+export const RouterMix = <T extends Constructor>(Base: T) => {
+  class RouterElement extends Base {
     subScriptions: Subscription[] = [];
     routes: Route[] = [];
     element: Element = stringToHTML("<eag-router-empty></eag-router-empty>");
+
     connectedCallback() {
       super.connectedCallback();
     }
@@ -29,18 +47,14 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
 
       const oldElem = this.element;
 
-   
-    
-      const result =  stringToHTML(elem.component!)
-      if(elem.props){
-        elem.props.forEach(prop => {
+      const result = stringToHTML(elem.component!);
+      if (elem.props) {
+        elem.props.forEach((prop) => {
+          result[prop.key] = prop.value;
+        });
+      }
+      this.element = result;
 
-
-          result[prop.key] = prop.value
-        })
-      }   
-      this.element = result
-        
       this.requestUpdate("element", oldElem);
       return this.element;
     }
@@ -78,4 +92,7 @@ export const RouterMix = <T extends Constructor>(Base: T) =>
       this.subScriptions.forEach((sub) => sub.unsubscribe());
       super.disconnectedCallback();
     }
-  };
+  }
+
+  return RouterElement as Constructor<RouterElementInterface> & T;
+};

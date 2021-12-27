@@ -32,7 +32,7 @@ export interface Route {
   component?: string;
   bundle?: () => Promise<any>;
   guard?: () => Observable<boolean> | Promise<boolean> | boolean;
-  props? : {key: string, value: any}[];
+  props?: { key: string; value: any }[];
 }
 
 let oldPath: string = "--";
@@ -106,10 +106,10 @@ export class EagRouter extends RouterMix(LitElement) {
   }
   base: string = "";
   exactPathMatch = false;
+ 
   createRenderRoot() {
     return this;
   }
-
   connectedCallback() {
     super.connectedCallback();
     // Install routes
@@ -121,9 +121,10 @@ export class EagRouter extends RouterMix(LitElement) {
 
     this.addSub(
       pageFound$.pipe(throttleTime(500)).subscribe((found) => {
-        if (found === false 
+        if (
+          found === false
           // && !this.exactPathMatch
-          ) {
+        ) {
           this.dispatchEvent(newCustomEvent);
         }
       })
@@ -149,28 +150,23 @@ export class EagRouter extends RouterMix(LitElement) {
 
   // This function changes routes
   async changeRoute(context: Context) {
-  
     try {
-      const elem = this.routes.find(
-        (route) => {
-          const result = route.path === context.routePath!
-         
+      // check if route exists
+      const elem = this.routes.find((route) => {
+        const result = route.path === context.routePath!;
 
-          if(result){
-
-            if(route.path === context.canonicalPath || `${route.path}/` ===  context.canonicalPath ){
-              this.exactPathMatch = true
-             
-            } else {
-              this.exactPathMatch = false
-            }
-          
-
-           
+        if (result) {
+          if (
+            route.path === context.canonicalPath ||
+            `${route.path}/` === context.canonicalPath
+          ) {
+            this.exactPathMatch = true;
+          } else {
+            this.exactPathMatch = false;
           }
-          return  result
         }
-      );
+        return result;
+      });
 
       // Check if there is a guard
       const guardExist = elem?.guard;
@@ -179,17 +175,18 @@ export class EagRouter extends RouterMix(LitElement) {
         const guard = await guardHandler(guardExist, "parent");
 
         if (!guard) {
-        
           history.replaceState(null, "", oldFullPath);
           return;
         }
       }
 
       if (!elem) {
-        this.exactPathMatch = false
+        this.exactPathMatch = false;
         oldPath = `eagPathMatch${Date.now()}`;
         const oldElemNotFound = this.element;
-        this.element = stringToHTML("<eag-router-empty style='display:none'>nothing to show</eag-router-empty>")
+        this.element = stringToHTML(
+          "<eag-router-empty style='display:none'>nothing to show</eag-router-empty>"
+        );
         this.requestUpdate("element", oldElemNotFound);
         return;
       }
@@ -222,9 +219,7 @@ export class EagRouter extends RouterMix(LitElement) {
     }
   }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-  }
+
   render() {
     return this.element;
   }
@@ -251,9 +246,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
     );
   }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-  }
 
   async renderView(path: string) {
     if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
@@ -269,10 +261,9 @@ export class EagRouterChild extends RouterMix(LitElement) {
         this.pathMatch = "eagPathMatch";
         const oldElemNotFound = this.element;
 
-
-
-
-        this.element =  stringToHTML("<eag-router-empty style='display:none'>nothing to show</eag-router-empty>");
+        this.element = stringToHTML(
+          "<eag-router-empty style='display:none'>nothing to show</eag-router-empty>"
+        );
         this.requestUpdate("element", oldElemNotFound);
 
         pageFoundSubject$.next(false);
