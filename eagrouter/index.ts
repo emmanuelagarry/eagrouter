@@ -106,7 +106,7 @@ export class EagRouter extends RouterMix(LitElement) {
   }
   base: string = "";
   exactPathMatch = false;
- 
+
   createRenderRoot() {
     return this;
   }
@@ -219,7 +219,6 @@ export class EagRouter extends RouterMix(LitElement) {
     }
   }
 
-
   render() {
     return this.element;
   }
@@ -245,7 +244,6 @@ export class EagRouterChild extends RouterMix(LitElement) {
       })
     );
   }
-
 
   async renderView(path: string) {
     if (pathToRegexp(this.pathMatch, [pathMatchKey]).test(path)) {
