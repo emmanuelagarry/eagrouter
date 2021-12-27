@@ -24,19 +24,7 @@ export declare const routerHistory: {
     replace: (path: string, state?: any, init?: boolean | undefined, dispatch?: boolean | undefined) => PageJS.Context;
 };
 export declare const latestRouterPath$: Observable<string>;
-declare const EagRouter_base: {
-    new (...args: any[]): {
-        [x: string]: any;
-        subScriptions: any[];
-        routes: Route[];
-        element: Element;
-        connectedCallback(): void;
-        addSub(sub: any): void;
-        resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: any, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
-        disconnectedCallback(): void;
-    };
-} & typeof LitElement;
+declare const EagRouter_base: (new (...args: any[]) => import("./utils/mixins").RouterElementInterface) & typeof LitElement;
 export declare class EagRouter extends EagRouter_base {
     constructor();
     base: string;
@@ -45,28 +33,14 @@ export declare class EagRouter extends EagRouter_base {
     connectedCallback(): void;
     installRoute(): void;
     changeRoute(context: Context): Promise<void>;
-    disconnectedCallback(): void;
     render(): Element;
 }
-declare const EagRouterChild_base: {
-    new (...args: any[]): {
-        [x: string]: any;
-        subScriptions: any[];
-        routes: Route[];
-        element: Element;
-        connectedCallback(): void;
-        addSub(sub: any): void;
-        resolveBundle(elem: Route, resolved: WeakSet<object>): Promise<Element>;
-        observerHandler(theElement: Element, pageFoundSubject$: any, pendingSubject$: any, contextQuerystring?: string, queryStringSubject$?: any, parentOrchild?: "parent" | "child"): void;
-        disconnectedCallback(): void;
-    };
-} & typeof LitElement;
+declare const EagRouterChild_base: (new (...args: any[]) => import("./utils/mixins").RouterElementInterface) & typeof LitElement;
 export declare class EagRouterChild extends EagRouterChild_base {
     private pathMatch;
     private latestPath$;
     createRenderRoot(): this;
     connectedCallback(): void;
-    disconnectedCallback(): void;
     renderView(path: string): Promise<void>;
     render(): Element;
 }
